@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using Avalonia.Markup.Xaml;
 using EZManifest.Linux.ViewModels;
 

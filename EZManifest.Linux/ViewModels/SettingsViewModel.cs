@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EZManifest.Linux.Services;
+using EZManifest.Models;
 using EZManifest.Services;
 using Microsoft.Extensions.DependencyInjection;
 

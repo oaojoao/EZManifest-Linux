@@ -40,7 +40,7 @@ public partial class LibraryViewModel : ObservableObject
         _messageBoxService = messageBoxService;
         _filePicker = filePicker;
         _services = services;
-        _ = LoadAsync();
+        _ = RefreshAsync();
     }
 
     [RelayCommand]

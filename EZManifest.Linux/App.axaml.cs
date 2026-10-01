@@ -7,7 +7,7 @@ namespace EZManifest.Linux;
 
 public class App : Avalonia.Application
 {
-    public static IServiceProvider Services { get; private set; } = null!;
+    public static IServiceProvider Services { get; internal set; } = null!;
 
     public App()
     {
@@ -17,7 +17,7 @@ public class App : Avalonia.Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (Avalonia.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        if (ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = Services.GetRequiredService<MainWindow>();
             var windowProvider = Services.GetRequiredService<WindowProvider>();
