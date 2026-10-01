@@ -14,9 +14,6 @@ public class App : Avalonia.Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
-    {
-    }
 
     public override void OnFrameworkInitializationCompleted()
     {
