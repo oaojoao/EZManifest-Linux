@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            x:Class="EZManifest.Linux.Views.DownloadsPage">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+            <Button Content="Browse manifest .zip…" Command="{Binding BrowseArchiveCommand}" />
+            <TextBlock Text="{Binding ArchivePath}" VerticalAlignment="Center" Foreground="Gray" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+            <TextBlock Text="Game:" VerticalAlignment="Center" />
+            <TextBox Text="{Binding GameName, Mode=TwoWay}" Width="240" />
+            <TextBlock Text="AppId:" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding AppId}" VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+            <Button Content="Download" Command="{Binding DownloadCommand}" Classes="accent" />
+            <Button Content="Cancel" Command="{Binding CancelCommand}" />
+            <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Width="260" />
+            <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Foreground="Gray" />
+        </StackPanel>
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Depots}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Depot" Binding="{Binding DisplayName}" />
+                <DataGridTextColumn Header="Manifest" Binding="{Binding ManifestId}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=EZManifest
+Comment=Import Steam depot manifests, download game files, and manage a local library
+Exec=EZManifest
+Icon=EZManifest
+Terminal=false
+Categories=Game;
+StartupWMClass=EZManifest

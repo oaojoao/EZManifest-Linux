@@ -16,7 +16,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN;WINDOWS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Assets\EZManifestLogo.png">

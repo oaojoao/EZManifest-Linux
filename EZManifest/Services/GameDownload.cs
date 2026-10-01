@@ -7,7 +7,9 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using EZManifest.Models;
+#if WINDOWS
 using Microsoft.Win32.SafeHandles;
+#endif
 using SteamKit2;
 using SteamKit2.CDN;
 
@@ -27,11 +29,14 @@ public static class GameDownload
     private static readonly TimeSpan ResponseBodyTimeout = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan WriteTimeout = TimeSpan.FromMinutes(2);
 
+#if WINDOWS
     private const uint FSCTL_SET_SPARSE = 0x000900c4;
+#endif
 
     private const string ContentServerDirectoryUrlFormat =
         "https://api.steampowered.com/IContentServerDirectoryService/GetServersForSteamPipe/v1/?cell_id={0}&max_servers=80";
 
+#if WINDOWS
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool DeviceIoControl(
         SafeFileHandle hDevice,
@@ -42,6 +47,7 @@ public static class GameDownload
         uint nOutBufferSize,
         out uint lpBytesReturned,
         IntPtr lpOverlapped);
+#endif
 
     public static async Task BatchEngineStart(
         List<DepotInfo> depots,
@@ -483,8 +489,10 @@ public static class GameDownload
                 bufferSize: 4096,
                 FileOptions.None);
 
+#if WINDOWS
             // Sparse makes SetLength metadata-only on NTFS (no zero-fill).
             sparseOk = TryMarkSparse(fs.SafeFileHandle);
+#endif
 
             if (fileSize >= 0 && fs.Length != fileSize)
                 fs.SetLength(fileSize);
@@ -498,6 +506,7 @@ public static class GameDownload
         }
     }
 
+#if WINDOWS
     private static bool TryMarkSparse(SafeFileHandle handle)
     {
         try
@@ -522,6 +531,7 @@ public static class GameDownload
             return false;
         }
     }
+#endif
 
     private static async Task DownloadChunkAsync(
         ChunkWork work,

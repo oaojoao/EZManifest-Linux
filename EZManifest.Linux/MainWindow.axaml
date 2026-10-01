@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="EZManifest.Linux.MainWindow"
+        Title="EZManifest"
+        Width="1200" Height="780"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid ColumnDefinitions="220,*">
+        <Border Grid.Column="0" Classes="sidebar" Background="#1b1b1f">
+            <StackPanel Spacing="6" Margin="12,16,12,0">
+                <TextBlock Text="EZManifest" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
+                <Button x:Name="NavLibrary"    Content="Library"    Classes="nav" Click="OnNavigateLibrary" />
+                <Button x:Name="NavDownloads" Content="Downloads" Classes="nav" Click="OnNavigateDownloads" />
+                <Button x:Name="NavSettings"   Content="Settings"   Classes="nav" Click="OnNavigateSettings" />
+            </StackPanel>
+        </Border>
+        <ContentControl Grid.Column="1" x:Name="PageHost" />
+    </Grid>
+
+    <Window.Styles>
+        <Style Selector="Button.nav">
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2a2a30" />
+        </Style>
+    </Window.Styles>
+
+</Window>
