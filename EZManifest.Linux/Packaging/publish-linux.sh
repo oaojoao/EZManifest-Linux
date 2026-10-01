@@ -4,9 +4,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT="$ROOT/EZManifest.Linux/publish/linux-x64"
+OUT="$ROOT/publish/linux-x64"
 
-dotnet publish "$ROOT/EZManifest.Linux/EZManifest.Linux.csproj" \
+dotnet publish "$ROOT/EZManifest.Linux.csproj" \
   -c Release \
   -r linux-x64 \
   --self-contained true \

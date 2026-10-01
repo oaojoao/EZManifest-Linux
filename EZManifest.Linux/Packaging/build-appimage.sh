@@ -4,9 +4,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PUBLISH="$ROOT/EZManifest.Linux/publish/linux-x64"
-APPDIR="$ROOT/EZManifest.Linux/publish/AppDir"
-OUTPUT="$ROOT/EZManifest.Linux/publish"
+PUBLISH="$ROOT/publish/linux-x64"
+APPDIR="$ROOT/publish/AppDir"
+OUTPUT="$ROOT/publish"
 VERSION="${1:-1.2.2}"
 
 rm -rf "$APPDIR"
@@ -15,8 +15,8 @@ mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/i
 cp "$PUBLISH/EZManifest" "$APPDIR/usr/bin/EZManifest"
 chmod +x "$APPDIR/usr/bin/EZManifest"
 
-cp "$ROOT/EZManifest.Linux/Packaging/EZManifest.desktop" "$APPDIR/usr/share/applications/EZManifest.desktop"
-cp "$ROOT/EZManifest.Linux/Assets/EZManifestLogo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png"
+cp "$ROOT/Packaging/EZManifest.desktop" "$APPDIR/usr/share/applications/EZManifest.desktop"
+cp "$ROOT/Assets/EZManifestLogo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png"
 
 # linuxdeploy AppRun (self-contained executable from CI download)
 LINUXDEPLOY="${LINUXDEPLOY:-$OUTPUT/linuxdeploy-x86_64.AppImage}"
