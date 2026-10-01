@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using EZManifest.Services;
 
 namespace EZManifest.Linux.Services;
 
