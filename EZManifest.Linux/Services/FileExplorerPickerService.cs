@@ -85,9 +85,13 @@ public sealed class FileExplorerPickerService
 
             var fileTypes = extensions?
                 .Where(ext => !string.IsNullOrWhiteSpace(ext))
-                .Select(ext => new FilePickerFileType(ext.ToUpperInvariant())
+                .Select(ext =>
                 {
-                    Patterns = [$"*{ext.StartsWith('.') ? ext : "." + ext}"]
+                    string pattern = ext.StartsWith('.') ? ext : "." + ext;
+                    return new FilePickerFileType(ext.ToUpperInvariant())
+                    {
+                        Patterns = [$"*{pattern}"]
+                    };
                 })
                 .ToList();
 
