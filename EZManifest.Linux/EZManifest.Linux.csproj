@@ -9,7 +9,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <BuiltInComSupport>false</BuiltInComSupport>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <ApplicationManifest="" />
   </PropertyGroup>
 
   <ItemGroup>
