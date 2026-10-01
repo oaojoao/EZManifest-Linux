@@ -88,6 +88,7 @@ public partial class App : Application
         services.AddSingleton<AppUpdateService>();
         services.AddSingleton<EasyListBlocker>();
         services.AddSingleton<PatchApplyService>();
+        services.AddSingleton<ProtonService>();
 
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainWindow>();
