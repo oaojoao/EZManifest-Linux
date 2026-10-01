@@ -1,4 +1,5 @@
 using System.Text;
+using EZManifest.Services;
 
 namespace EZManifest.Linux.Services;
 

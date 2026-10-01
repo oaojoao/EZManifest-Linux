@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using EZManifest.Services;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 
