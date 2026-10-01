@@ -59,18 +59,6 @@ public sealed class FileExplorerPickerService
 
             IStorageProvider storage = window.StorageProvider;
 
-            IStorageFolder? startLocation = null;
-            if (!string.IsNullOrWhiteSpace(initialPath) && Directory.Exists(initialPath))
-            {
-                try
-                {
-                    startLocation = await storage.TryGetFolderAsync(initialPath);
-                }
-                catch
-                {
-                    startLocation = null;
-                }
-            }
 
             if (foldersOnly)
             {
@@ -78,7 +66,6 @@ public sealed class FileExplorerPickerService
                 {
                     Title = title,
                     AllowMultiple = allowMultiSelect,
-                    SuggestedStartLocation = startLocation
                 });
                 return result.Select(folder => folder.TryGetLocalPath()).OfType<string>().ToList();
             }
@@ -100,7 +87,6 @@ public sealed class FileExplorerPickerService
                 Title = title,
                 AllowMultiple = allowMultiSelect,
                 FileTypeFilter = fileTypes,
-                SuggestedStartLocation = startLocation
             });
             return fileResult.Select(file => file.TryGetLocalPath()).OfType<string>().ToList();
         }

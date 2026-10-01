@@ -98,7 +98,7 @@ public sealed class PatchApplyService
         IProgress<PatchApplyProgress>? progress,
         CancellationToken cancellationToken)
     {
-        using var archive = ArchiveFactory.Open(archivePath);
+        using var archive = ArchiveFactory.OpenArchive(archivePath);
         int total = archive.Entries.Count();
         int done = 0;
         foreach (var entry in archive.Entries)
