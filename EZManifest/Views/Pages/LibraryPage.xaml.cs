@@ -40,6 +40,8 @@ public sealed partial class LibraryPage : Page, INotifyPropertyChanged
     private readonly AppNotificationService _notifications;
     private readonly AppNavigationService _navigation;
     private readonly IServiceProvider _services;
+    private readonly AppSettingsService _settingsService;
+    private readonly ProtonService _protonService;
     private readonly HashSet<string> _selectedAppIds = new(StringComparer.OrdinalIgnoreCase);
 
     private bool _hasLoaded;
@@ -107,6 +109,8 @@ public sealed partial class LibraryPage : Page, INotifyPropertyChanged
         SteamMetadataService steamMetadata,
         AppNotificationService notifications,
         AppNavigationService navigation,
+        AppSettingsService settingsService,
+        ProtonService protonService,
         IServiceProvider services)
     {
         _gameLibrary = gameLibrary;
@@ -121,6 +125,8 @@ public sealed partial class LibraryPage : Page, INotifyPropertyChanged
         _steamMetadata = steamMetadata;
         _notifications = notifications;
         _navigation = navigation;
+        _settingsService = settingsService;
+        _protonService = protonService;
         _services = services;
 
         InitializeComponent();
@@ -1765,17 +1771,40 @@ public sealed partial class LibraryPage : Page, INotifyPropertyChanged
             }
 
             // Start the game directly (no cmd). ShellExecute returns immediately for GUI apps.
-            await Task.Run(() =>
+            var settings = await _settingsService.LoadAsync();
+            ProcessStartInfo psi;
+            if (ProtonService.IsSupported && settings.UseProton)
             {
-                var psi = new ProcessStartInfo
+                ProtonInstall? proton = _protonService.ResolveVersion(settings.ProtonVersion);
+                if (proton is null)
+                {
+                    AppLog.Write($"[Library] Proton requested for '{game.Name}' but no Proton installation was found");
+                    await _messageBoxService.ShowAsync(
+                        "Proton not found",
+                        "Play is set to use Proton, but no installed Proton version was found.\n\nInstall Proton (or GE-Proton) via Steam, then try again.");
+                    return;
+                }
+
+                string compatDataPath = ProtonService.GetCompatDataPath(gameFolder, game.AppId);
+                psi = _protonService.BuildLaunchCommand(
+                    proton,
+                    exePath,
+                    workingDirectory,
+                    game.LaunchOptions ?? string.Empty,
+                    compatDataPath);
+            }
+            else
+            {
+                psi = new ProcessStartInfo
                 {
                     FileName = exePath,
                     WorkingDirectory = workingDirectory,
                     Arguments = game.LaunchOptions ?? string.Empty,
                     UseShellExecute = true
                 };
-                Process.Start(psi);
-            });
+            }
+
+            await Task.Run(() => Process.Start(psi));
             _recentLaunches[exePath] = DateTime.UtcNow;
             game.IsRunning = true;
         }

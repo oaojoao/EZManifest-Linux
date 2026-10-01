@@ -269,6 +269,52 @@
                     </Grid>
                 </Border>
 
+                <Border Style="{StaticResource SettingsCardStyle}" x:Name="ProtonCard">
+                    <Grid RowSpacing="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Style="{StaticResource SettingsCardIconStyle}" Glyph="&#xE768;" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource SettingsCardTitleStyle}" Text="Play with Proton" />
+                                <TextBlock
+                                    Style="{StaticResource SettingsCardDescriptionStyle}"
+                                    Text="Launch Windows game executables through a Proton version installed on this system. Off launches them directly." />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="UseProtonToggle"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                OnContent=""
+                                OffContent=""
+                                MinWidth="0"
+                                Toggled="UseProtonToggle_Toggled" />
+                        </Grid>
+                        <StackPanel
+                            x:Name="ProtonVersionPanel"
+                            Grid.Row="1"
+                            Margin="47,0,0,0"
+                            Spacing="8">
+                            <ComboBox
+                                x:Name="ProtonVersionComboBox"
+                                MinWidth="220"
+                                HorizontalAlignment="Left"
+                                SelectionChanged="ProtonVersionComboBox_SelectionChanged" />
+                            <TextBlock
+                                x:Name="ProtonVersionHint"
+                                Style="{StaticResource SettingsCardDescriptionStyle}"
+                                Text="Auto uses the newest Proton version found on this system." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <TextBlock Style="{StaticResource SettingsSectionHeaderStyle}" Text="Notifications" />
                 <Border Style="{StaticResource SettingsCardStyle}">
                     <Grid ColumnSpacing="12">

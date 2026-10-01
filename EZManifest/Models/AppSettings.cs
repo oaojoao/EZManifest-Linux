@@ -50,4 +50,10 @@ public sealed class AppSettings
 
     /// <summary>When true, the depot picker lists every depot ID and skips Windows auto-select.</summary>
     public bool ShowAllDepotIds { get; set; }
+
+    /// <summary>When true, Play launches Windows executables through Proton instead of directly.</summary>
+    public bool UseProton { get; set; }
+
+    /// <summary>Preferred Proton version name, or "Auto" to use the newest installed one.</summary>
+    public string ProtonVersion { get; set; } = Services.ProtonService.AutoVersion;
 }

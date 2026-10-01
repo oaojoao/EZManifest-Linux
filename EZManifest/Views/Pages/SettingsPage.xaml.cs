@@ -17,6 +17,8 @@ public sealed partial class SettingsPage : Page
     private bool _suppressShowAllDepotsSave = true;
     private bool _suppressUpdateSave = true;
     private bool _suppressPreferredSourceSave = true;
+    private bool _suppressProtonSave = true;
+    private readonly ProtonService _protonService;
 
     public SettingsViewModel ViewModel { get; }
 
@@ -25,13 +27,15 @@ public sealed partial class SettingsPage : Page
         AppSettingsService settingsService,
         AppMessageBoxService messageBoxService,
         AppUpdateService updateService,
-        FileExplorerPickerService filePicker)
+        FileExplorerPickerService filePicker,
+        ProtonService protonService)
     {
         ViewModel = viewModel;
         _settingsService = settingsService;
         _messageBoxService = messageBoxService;
         _updateService = updateService;
         _filePicker = filePicker;
+        _protonService = protonService;
         InitializeComponent();
         _ = LoadSettingsAsync();
     }
@@ -58,10 +62,14 @@ public sealed partial class SettingsPage : Page
             PreferredSourceToggle.IsOn = settings.UsePreferredManifestSource;
             PreferredSourceTextBox.Text = settings.PreferredManifestSourceUrl;
             UpdatePreferredSourceInputs();
+
+            LoadProtonControls(settings);
+
             _suppressNotifySave = false;
             _suppressShowAllDepotsSave = false;
             _suppressUpdateSave = false;
             _suppressPreferredSourceSave = false;
+            _suppressProtonSave = false;
         }
         catch (Exception ex)
         {
@@ -71,6 +79,74 @@ public sealed partial class SettingsPage : Page
             _suppressShowAllDepotsSave = false;
             _suppressUpdateSave = false;
             _suppressPreferredSourceSave = false;
+            _suppressProtonSave = false;
+        }
+    }
+
+    private void LoadProtonControls(AppSettings settings)
+    {
+        bool supported = ProtonService.IsSupported;
+        ProtonCard.Visibility = supported ? Visibility.Visible : Visibility.Collapsed;
+        if (!supported)
+            return;
+
+        _suppressProtonSave = true;
+        UseProtonToggle.IsOn = settings.UseProton;
+
+        var versions = new List<string> { ProtonService.AutoVersion };
+        versions.AddRange(_protonService.GetInstalledVersions().Select(v => v.Name));
+        ProtonVersionComboBox.ItemsSource = versions;
+        ProtonVersionComboBox.SelectedItem = versions.FirstOrDefault(v =>
+            string.Equals(v, settings.ProtonVersion, StringComparison.OrdinalIgnoreCase)) ?? ProtonService.AutoVersion;
+
+        if (_protonService.GetInstalledVersions().Count == 0)
+        {
+            ProtonVersionHint.Text = "No Proton installation was found. Install Proton (or GE-Proton) via Steam, then reopen Settings.";
+        }
+
+        UpdateProtonVersionInputs();
+        _suppressProtonSave = false;
+    }
+
+    private void UpdateProtonVersionInputs()
+    {
+        ProtonVersionPanel.Visibility = UseProtonToggle.IsOn ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private async void UseProtonToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        UpdateProtonVersionInputs();
+        if (_suppressProtonSave)
+            return;
+
+        bool enabled = UseProtonToggle.IsOn;
+        try
+        {
+            await _settingsService.UpdateAsync(settings => settings.UseProton = enabled);
+            AppLog.Write($"[Settings] Play with Proton {(enabled ? "enabled" : "disabled")}");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "Failed to save Proton toggle");
+        }
+    }
+
+    private async void ProtonVersionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressProtonSave)
+            return;
+
+        if (ProtonVersionComboBox.SelectedItem is not string version)
+            return;
+
+        try
+        {
+            await _settingsService.UpdateAsync(settings => settings.ProtonVersion = version);
+            AppLog.Write($"[Settings] Proton version saved: {version}");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "Failed to save Proton version");
         }
     }
 
