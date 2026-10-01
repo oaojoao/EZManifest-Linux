@@ -1,0 +1,97 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+
+jobs:
+  build-windows:
+    name: Build & publish (windows-latest, x64)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore EZManifest\EZManifest.csproj -p:Platform=x64
+
+      - name: Build
+        run: dotnet build EZManifest\EZManifest.csproj -c Release -p:Platform=x64 --no-restore
+
+      - name: Publish (single-file, self-contained)
+        run: >
+          dotnet publish EZManifest\EZManifest.csproj
+          -c Release
+          -r win-x64
+          -p:Platform=x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=false
+          -p:WindowsAppSDKSelfContained=true
+          -p:WindowsPackageType=None
+          -o publish
+
+      - name: Stage SteamAutoCrack.CLI
+        shell: pwsh
+        run: .\scripts\stage-steamautocrack.ps1 -PublishDir publish -DownloadUrl "https://github.com/dpadGuy/Steam-auto-crack/releases/download/3.5.0.7/SteamAutoCrack.CLI.zip"
+
+      - name: Archive app
+        shell: pwsh
+        run: |
+          if (Test-Path publish\EZManifest.zip) { Remove-Item publish\EZManifest.zip -Force }
+          tar.exe -a -c -f publish\EZManifest.zip -C publish EZManifest.exe SteamAutoCrack.CLI
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EZManifest-win-x64
+          path: publish/EZManifest.zip
+          if-no-files-found: error
+
+      - name: Upload installer (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: EZManifest-setup
+          path: installer/EZManifest-Setup-*.exe
+          if-no-files-found: ignore
+
+  build-linux:
+    name: Linux smoke build (no UI)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Compile Proton service (Linux portability check)
+        run: |
+          mkdir -p /tmp/linux-smoke
+          cp EZManifest/Services/ProtonService.cs EZManifest/Services/DebugLogService.cs /tmp/linux-smoke/
+          cat > /tmp/linux-smoke/Smoke.csproj <<'EOF'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>net8.0</TargetFramework>
+              <Nullable>enable</Nullable>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <RootNamespace>EZManifest.Services</RootNamespace>
+            </PropertyGroup>
+          </Project>
+          EOF
+          dotnet build /tmp/linux-smoke/Smoke.csproj -c Release
