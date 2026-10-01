@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>EZManifest.Linux</RootNamespace>
+    <AssemblyName>EZManifest</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BuiltInComSupport>false</BuiltInComSupport>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ApplicationManifest="" />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="App.axaml.cs" />
+    <Compile Include="MainWindow.axaml.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Shims\**\*.cs" />
+    <Compile Include="Services\**\*.cs" />
+    <Compile Include="ViewModels\**\*.cs" />
+    <Compile Include="Views\**\*.cs" />
+  </ItemGroup>
+
+  <!-- Portable business logic shared with the Windows project -->
+  <ItemGroup>
+    <Compile Include="..\EZManifest\Models\AppConfig.cs" Link="Shared\Models\AppConfig.cs" />
+    <Compile Include="..\EZManifest\Models\AppSettings.cs" Link="Shared\Models\AppSettings.cs" />
+    <Compile Include="..\EZManifest\Models\DataColor.cs" Link="Shared\Models\DataColor.cs" />
+    <Compile Include="..\EZManifest\Models\DepotDisplayInfo.cs" Link="Shared\Models\DepotDisplayInfo.cs" />
+    <Compile Include="..\EZManifest\Models\DepotInfo.cs" Link="Shared\Models\DepotInfo.cs" />
+    <Compile Include="..\EZManifest\Models\DownloadItem.cs" Link="Shared\Models\DownloadItem.cs" />
+    <Compile Include="..\EZManifest\Models\DownloadProgress.cs" Link="Shared\Models\DownloadProgress.cs" />
+    <Compile Include="..\EZManifest\Models\FileExplorerPicker.cs" Link="Shared\Models\FileExplorerPicker.cs" />
+    <Compile Include="..\EZManifest\Models\GameEntry.cs" Link="Shared\Models\GameEntry.cs" />
+    <Compile Include="..\EZManifest\Models\GameMediaItem.cs" Link="Shared\Models\GameMediaItem.cs" />
+    <Compile Include="..\EZManifest\Models\InstalledDepotRecord.cs" Link="Shared\Models\InstalledDepotRecord.cs" />
+    <Compile Include="..\EZManifest\Models\LibrarySortMode.cs" Link="Shared\Models\LibrarySortMode.cs" />
+    <Compile Include="..\EZManifest\Models\ManifestArchiveResult.cs" Link="Shared\Models\ManifestArchiveResult.cs" />
+    <Compile Include="..\EZManifest\Models\SteamCdnRegion.cs" Link="Shared\Models\SteamCdnRegion.cs" />
+    <Compile Include="..\EZManifest\Services\AppPaths.cs" Link="Shared\Services\AppPaths.cs" />
+    <Compile Include="..\EZManifest\Services\AppSettingsService.cs" Link="Shared\Services\AppSettingsService.cs" />
+    <Compile Include="..\EZManifest\Services\DebugLogService.cs" Link="Shared\Services\DebugLogService.cs" />
+    <Compile Include="..\EZManifest\Services\DownloadPauseState.cs" Link="Shared\Services\DownloadPauseState.cs" />
+    <Compile Include="..\EZManifest\Services\GameDownload.cs" Link="Shared\Services\GameDownload.cs" />
+    <Compile Include="..\EZManifest\Services\GameInstallSizeService.cs" Link="Shared\Services\GameInstallSizeService.cs" />
+    <Compile Include="..\EZManifest\Services\GameLibraryService.cs" Link="Shared\Services\GameLibraryService.cs" />
+    <Compile Include="..\EZManifest\Services\GeForceNowHost.cs" Link="Shared\Services\GeForceNowHost.cs" />
+    <Compile Include="..\EZManifest\Services\LuaManifestParser.cs" Link="Shared\Services\LuaManifestParser.cs" />
+    <Compile Include="..\EZManifest\Services\ManifestArchiveService.cs" Link="Shared\Services\ManifestArchiveService.cs" />
+    <Compile Include="..\EZManifest\Services\ManifestInstallStateService.cs" Link="Shared\Services\ManifestInstallStateService.cs" />
+    <Compile Include="..\EZManifest\Services\ProtonService.cs" Link="Shared\Services\ProtonService.cs" />
+    <Compile Include="..\EZManifest\Services\RefreshService.cs" Link="Shared\Services\RefreshService.cs" />
+    <Compile Include="..\EZManifest\Services\SteamDepotMetadataService.cs" Link="Shared\Services\SteamDepotMetadataService.cs" />
+    <Compile Include="..\EZManifest\Services\SteamMetadataService.cs" Link="Shared\Services\SteamMetadataService.cs" />
+    <Compile Include="..\EZManifest\Services\SteamService.cs" Link="Shared\Services\SteamService.cs" />
+    <Compile Include="..\EZManifest\Services\SteamDepotPlatformFilter.cs" Link="Shared\Services\SteamDepotPlatformFilter.cs" />
+    <Compile Include="..\EZManifest\Services\SteamLanguageNames.cs" Link="Shared\Services\SteamLanguageNames.cs" />
+    <Compile Include="..\EZManifest\Services\SteamShortcutsVdf.cs" Link="Shared\Services\SteamShortcutsVdf.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="SharpCompress" Version="0.50.4" />
+    <PackageReference Include="SteamKit2" Version="3.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Views\*.axaml" />
+    <AvaloniaResource Include="MainWindow.axaml" />
+    <AvaloniaResource Include="Assets\EZManifestLogo.png" />
+    <None Include="Assets\EZManifestLogo.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

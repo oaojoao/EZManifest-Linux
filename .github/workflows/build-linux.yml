@@ -1,0 +1,51 @@
+name: Build Linux AppImage
+
+on:
+  push:
+    branches: [master, vibe/*]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-appimage:
+    name: Build & package AppImage (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install Avalonia native prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libice-cil libatk1.0-0 libatk-bridge2.0-0 || true
+
+      - name: Publish Linux app
+        run: |
+          chmod +x EZManifest.Linux/Packaging/publish-linux.sh
+          EZManifest.Linux/Packaging/publish-linux.sh
+
+      - name: Download linuxdeploy
+        run: |
+          curl -sL -o EZManifest.Linux/publish/linuxdeploy-x86_64.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x EZManifest.Linux/publish/linuxdeploy-x86_64.AppImage
+
+      - name: Package AppImage
+        run: |
+          chmod +x EZManifest.Linux/Packaging/build-appimage.sh
+          EZManifest.Linux/Packaging/build-appimage.sh "1.2.2"
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EZManifest-Linux-AppImage
+          path: EZManifest.Linux/publish/*.AppImage
+          if-no-files-found: error

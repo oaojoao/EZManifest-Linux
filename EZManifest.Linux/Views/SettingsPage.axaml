@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            x:Class="EZManifest.Linux.Views.SettingsPage">
+    <ScrollViewer Padding="24">
+        <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" FontSize="24" FontWeight="Bold" />
+
+            <TextBlock Text="Install path" FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox Text="{Binding DownloadPath, Mode=TwoWay}" Width="420" Watermark="Choose where games are installed…" />
+                <Button Content="Browse" Command="{Binding BrowseDownloadPathCommand}" />
+                <Button Content="Apply" Command="{Binding ApplyDownloadPathCommand}" Classes="accent" />
+            </StackPanel>
+
+            <TextBlock Text="Proton" FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Play with Proton" VerticalAlignment="Center" />
+                <ToggleSwitch IsChecked="{Binding UseProton, Mode=TwoWay}" />
+                <ComboBox ItemsSource="{Binding ProtonVersions}" SelectedItem="{Binding ProtonVersion, Mode=TwoWay}" MinWidth="200" />
+            </StackPanel>
+
+            <TextBlock Text="Download concurrency" FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <NumericUpDown Value="{Binding MaxConcurrentChunks, Mode=TwoWay}" Minimum="1" Maximum="64" Width="120" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding StatusText}" Foreground="Gray" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
