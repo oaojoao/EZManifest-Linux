@@ -71,8 +71,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Views\*.axaml" />
-    <AvaloniaResource Include="MainWindow.axaml" />
     <AvaloniaResource Include="Assets\EZManifestLogo.png" />
     <None Include="Assets\EZManifestLogo.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
