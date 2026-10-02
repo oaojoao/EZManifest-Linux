@@ -49,12 +49,34 @@ public sealed class ProtonService
             if (string.IsNullOrWhiteSpace(home))
                 yield break;
 
-            yield return Path.Combine(home, ".steam", "steam", "steamapps", "common");
-            yield return Path.Combine(home, ".steam", "root", "steamapps", "common");
-            yield return Path.Combine(home, ".local", "share", "Steam", "steamapps", "common");
-            yield return Path.Combine(home, ".steam", "steam", "compatibilitytools.d");
-            yield return Path.Combine(home, ".steam", "root", "compatibilitytools.d");
-            yield return Path.Combine(home, ".local", "share", "Steam", "compatibilitytools.d");
+            // ~/.steam/steam, ~/.steam/root and ~/.local/share/Steam are usually
+            // symlinks to the same Steam library: resolve them and skip duplicates
+            // so each Proton build is discovered exactly once.
+            var seenRoots = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string libraryRoot in new[]
+            {
+                Path.Combine(home, ".steam", "steam"),
+                Path.Combine(home, ".local", "share", "Steam"),
+                Path.Combine(home, ".steam", "root"),
+            })
+            {
+                string resolved;
+                try
+                {
+                    if (!Directory.Exists(libraryRoot))
+                        continue;
+                    resolved = Path.GetFullPath(libraryRoot);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (!seenRoots.Add(resolved))
+                    continue;
+                yield return Path.Combine(resolved, "steamapps", "common");
+                yield return Path.Combine(resolved, "compatibilitytools.d");
+            }
         }
     }
 

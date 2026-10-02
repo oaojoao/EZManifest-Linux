@@ -61,8 +61,11 @@ public partial class LibraryViewModel : ObservableObject
         try
         {
             string startLocation = game.StartLocation;
-            if (string.IsNullOrWhiteSpace(startLocation))
+            bool needsPick = string.IsNullOrWhiteSpace(startLocation) || !File.Exists(startLocation);
+            if (needsPick)
             {
+                if (!string.IsNullOrWhiteSpace(startLocation))
+                    StatusText = $"Saved executable was not found, picking a new one for {game.Name}...";
                 string? picked = await PickGameExecutableAsync(game);
                 if (string.IsNullOrWhiteSpace(picked))
                     return;
@@ -151,11 +154,30 @@ public partial class LibraryViewModel : ObservableObject
         }
         if (executables.Count == 1)
             return executables[0];
-        var paths = await _filePicker.PickFilesAsync(
-            [".exe"],
-            $"Select executable for {game.Name}",
-            folder,
-            allowMultiSelect: false);
-        return paths.Count > 0 ? paths[0] : null;
+
+        // Same flow as the Windows app: let the user choose from the executables
+        // found in the install folder (plus a manual browse fallback).
+        var vm = new ExeSelectionViewModel(
+            $"Choose the game executable for {game.Name}",
+            executables.Select(path => Path.GetRelativePath(folder, path)).ToList())
+        {
+            AllowBrowse = true
+        };
+        var page = new Views.ExeSelectionDialog { DataContext = vm };
+        var result = await _messageBoxService.ShowDialogAsync(page, "Play", "Cancel");
+        if (result != ContentDialogResult.Primary)
+            return null;
+        if (vm.SelectedIndex >= 0 && vm.SelectedIndex < executables.Count)
+            return executables[vm.SelectedIndex];
+        if (vm.BrowseRequested)
+        {
+            var paths = await _filePicker.PickFilesAsync(
+                [".exe"],
+                $"Select executable for {game.Name}",
+                folder,
+                allowMultiSelect: false);
+            return paths.Count > 0 ? paths[0] : null;
+        }
+        return null;
     }
 }

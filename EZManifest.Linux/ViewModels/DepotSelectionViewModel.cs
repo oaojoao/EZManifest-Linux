@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace EZManifest.Linux.ViewModels;
 
@@ -43,6 +44,15 @@ public partial class ExeSelectionViewModel : ObservableObject
 
     [ObservableProperty]
     private int _selectedIndex = -1;
+
+    [ObservableProperty]
+    private bool _allowBrowse;
+
+    [ObservableProperty]
+    private bool _browseRequested;
+
+    [RelayCommand]
+    private void Browse() => BrowseRequested = true;
 
     public ExeSelectionViewModel(string title, IReadOnlyList<string> executables)
     {
