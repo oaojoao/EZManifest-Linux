@@ -57,14 +57,34 @@ public sealed class GameLauncher
 
         string compatDataPath = ResolvePrefixPath(game, workingDirectory);
 
-        ProcessStartInfo psi = _protonService.BuildLaunchCommand(
+        var psi = _protonService.BuildLaunchCommand(
             proton,
             exePath,
             workingDirectory,
             game.LaunchOptions ?? string.Empty,
             compatDataPath);
-        Process.Start(psi);
-        AppLog.Write($"[Play] Launched '{game.Name}' via {proton.Name}");
+
+        // Detach the game into its own session (setsid) and point std streams at
+        // a log file: the game must not share pipes with this app, otherwise a
+        // closed pipe or a parent signal kills it mid-game.
+        string logPath = Path.Combine(AppPaths.DataDirectory, "game-launch.log");
+        string command = $"exec setsid {Quote(psi.FileName)} run {Quote(exePath)}" +
+            (string.IsNullOrWhiteSpace(game.LaunchOptions) ? string.Empty : $" {game.LaunchOptions}") +
+            $" >> {Quote(logPath)} 2>&1";
+
+        var detached = new ProcessStartInfo
+        {
+            FileName = "/bin/sh",
+            Arguments = $"-c {Quote(command)}",
+            WorkingDirectory = psi.WorkingDirectory,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (var pair in psi.Environment)
+            detached.Environment[pair.Key] = pair.Value;
+
+        Process.Start(detached);
+        AppLog.Write($"[Play] Launched '{game.Name}' via {proton.Name} (detached session)");
     }
 
     /// <summary>
@@ -104,6 +124,9 @@ public sealed class GameLauncher
         }
         return null;
     }
+
+    private static string Quote(string value) =>
+        "'" + value.Replace("'", "'\''") + "'";
 
     private static void LaunchDirect(string fileName, string workingDirectory, string? arguments)
     {
