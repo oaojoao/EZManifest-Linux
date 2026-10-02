@@ -116,7 +116,20 @@ public partial class DepotBoxViewModel : ObservableObject
         {
             var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
             if (item is null)
-                return;
+            {
+                // WebViewControl has no "download started" event: the first
+                // progress notification is the signal that a download began.
+                item = new BrowserDownloadItem
+                {
+                    FileName = Path.GetFileName(fullPath),
+                    FullPath = fullPath
+                };
+                BrowserDownloads.Insert(0, item);
+                StatusText = $"Downloading {item.FileName}...";
+                // Mirror the Windows behaviour: a finished archive import takes
+                // over the UI, so jump to the Downloads page while it runs.
+                MainWindow.NavigateRequested?.Invoke("Downloads");
+            }
             item.ReceivedBytes = received;
             item.TotalBytes = total;
         });
@@ -124,6 +137,8 @@ public partial class DepotBoxViewModel : ObservableObject
 
     public async void OnDownloadCompleted(string fullPath)
     {
+        try
+        {
         await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
         {
             var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
@@ -149,6 +164,11 @@ public partial class DepotBoxViewModel : ObservableObject
             if (item is not null)
                 item.Status = "Done";
         });
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "[DepotBox] Download completion failed");
+        }
     }
 
     public void OnDownloadCancelled(string fullPath)
