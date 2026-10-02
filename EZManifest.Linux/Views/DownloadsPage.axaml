@@ -1,34 +1,56 @@
 <UserControl xmlns="https://github.com/avaloniaui"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:models="using:EZManifest.Models"
             x:Class="EZManifest.Linux.Views.DownloadsPage">
     <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
-            <Button Content="Browse manifest .zip…" Command="{Binding BrowseArchiveCommand}" />
-            <TextBlock Text="{Binding ArchivePath}" VerticalAlignment="Center" Foreground="Gray" />
+        <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,16">
+            <TextBlock Text="DepotBox" FontSize="20" FontWeight="Bold" />
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,8">
+                <TextBox Grid.Column="0"
+                         Text="{Binding DepotBoxUrl, Mode=TwoWay}"
+                         Watermark="https://depotbox.org/"
+                         VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Open in browser" Command="{Binding OpenDepotBoxInBrowserCommand}"
+                        Margin="8,0,0,0" />
+                <Button Grid.Column="2" Content="Save source" Command="{Binding SaveSourceCommand}"
+                        Margin="8,0,0,0" />
+                <Button Grid.Column="3" Content="Import manifest .zip..." Command="{Binding BrowseArchiveCommand}"
+                        Classes="accent" Margin="8,0,0,0" />
+            </Grid>
+            <TextBlock Text="{Binding DepotBoxUrlError}" Foreground="OrangeRed" IsVisible="{Binding DepotBoxUrlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Text="{Binding DepotBoxHint}" TextWrapping="Wrap" Opacity="0.75" />
         </StackPanel>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
-            <TextBlock Text="Game:" VerticalAlignment="Center" />
-            <TextBox Text="{Binding GameName, Mode=TwoWay}" Width="240" />
-            <TextBlock Text="AppId:" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding AppId}" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,16" IsVisible="{Binding IsBusy}">
+            <ProgressBar IsIndeterminate="True" />
+            <TextBlock Text="{Binding StatusText}" Foreground="Gray" />
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
-            <Button Content="Download" Command="{Binding DownloadCommand}" Classes="accent" />
-            <Button Content="Cancel" Command="{Binding CancelCommand}" />
-            <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Width="260" />
-            <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Foreground="Gray" />
-        </StackPanel>
-        <DataGrid Grid.Row="3" ItemsSource="{Binding Depots}" AutoGenerateColumns="False">
+        <TextBlock Grid.Row="2" Text="{Binding StatusText}" Foreground="Gray" Margin="0,0,0,8"
+                   IsVisible="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}" />
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Downloads}" AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
-                <DataGridTemplateColumn>
+                <DataGridTextColumn Header="Game" Binding="{Binding GameName}" Width="240" />
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="220" />
+                <DataGridTemplateColumn Header="Progress" Width="280">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                            <StackPanel Spacing="4" Margin="0,4">
+                                <ProgressBar Value="{Binding ProgressValue}" Maximum="100" />
+                                <TextBlock Text="{Binding SizeProgressText}" Opacity="0.7" />
+                                <TextBlock Text="{Binding ElapsedText}" Opacity="0.7" />
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Depot" Binding="{Binding DisplayName}" />
-                <DataGridTextColumn Header="Manifest" Binding="{Binding ManifestId}" />
+                <DataGridTemplateColumn Header="Actions" Width="200">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4">
+                                <Button Content="{Binding PauseButtonText}" Command="{Binding PauseCommand}" />
+                                <Button Content="Cancel" Command="{Binding CancelCommand}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

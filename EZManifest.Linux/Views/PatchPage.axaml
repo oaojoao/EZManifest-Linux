@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            x:Class="EZManifest.Linux.Views.PatchPage">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
+        <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,16">
+            <TextBlock Text="Patch games" FontSize="20" FontWeight="Bold" />
+            <TextBlock Text="Download a patch archive (e.g. from gamecopyworld via your browser), then import it here and apply it to an installed game." TextWrapping="Wrap" Opacity="0.75" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button Content="Open gamecopyworld" Click="OnOpenGamecopyworld" />
+                <Button Content="Import patch archive..." Command="{Binding BrowsePatchArchiveCommand}" />
+                <Button Content="Apply patch" Command="{Binding ApplyPatchCommand}" Classes="accent" />
+            </StackPanel>
+        </StackPanel>
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Margin="0,0,0,12" IsVisible="{Binding IsBusy}" />
+        <TextBlock Grid.Row="2" Text="{Binding StatusText}" Foreground="Gray" Margin="0,0,0,16" TextWrapping="Wrap" />
+        <DataGrid Grid.Row="3" ItemsSource="{Binding InstalledGames}" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Game" Binding="{Binding Name}" Width="300" />
+                <DataGridTextColumn Header="Install path" Binding="{Binding InstallPath}" Width="500" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
