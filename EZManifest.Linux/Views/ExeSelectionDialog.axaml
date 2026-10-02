@@ -11,5 +11,7 @@
                          SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" />
             </ScrollViewer>
         </Border>
+        <Button Content="Browse for another executable..." Command="{Binding BrowseCommand}"
+                IsVisible="{Binding AllowBrowse}" HorizontalAlignment="Left" />
     </StackPanel>
 </UserControl>
