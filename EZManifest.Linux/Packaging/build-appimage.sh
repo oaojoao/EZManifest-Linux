@@ -19,7 +19,17 @@ cp "$PUBLISH/EZManifest" "$APPDIR/usr/bin/EZManifest"
 chmod +x "$APPDIR/usr/bin/EZManifest"
 
 cp "$ROOT/Packaging/EZManifest.desktop" "$APPDIR/usr/share/applications/EZManifest.desktop"
-cp "$ROOT/Assets/EZManifestLogo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png"
+
+# linuxdeploy requires standard icon resolutions; the source logo is 1024x1024.
+ICON="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png"
+if command -v convert >/dev/null 2>&1; then
+  convert "$ROOT/Assets/EZManifestLogo.png" -resize 256x256 "$ICON"
+elif command -v ffmpeg >/dev/null 2>&1; then
+  ffmpeg -y -loglevel error -i "$ROOT/Assets/EZManifestLogo.png" -vf scale=256:256 "$ICON"
+else
+  echo "No image tool available to resize the icon to 256x256" >&2
+  exit 1
+fi
 
 LINUXDEPLOY="${LINUXDEPLOY:-$TOOLS/linuxdeploy-x86_64.AppImage}"
 if [ ! -x "$LINUXDEPLOY" ]; then
