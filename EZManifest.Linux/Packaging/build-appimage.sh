@@ -48,12 +48,24 @@ export OUTPUT="$OUTDIR/EZManifest-$VERSION-x86_64.AppImage"
 export ARCH=x86_64
 export VERSION
 
+# Deploy dependencies from the real .NET executable; the launcher wrapper is a
+# shell script, so linuxdeploy must not try to parse it as an ELF binary.
+APPBIN="$APPDIR/usr/bin/app/EZManifest"
+chmod +x "$APPBIN"
 "$LINUXDEPLOY" \
   --appdir="$APPDIR" \
-  --executable="$APPDIR/usr/bin/EZManifest" \
   --desktop-file="$APPDIR/usr/share/applications/EZManifest.desktop" \
   --icon-file="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
+  --executable="$APPBIN" \
   --output=appimage
+
+# linuxdeploy moved the real binary into usr/bin: put the wrapper back on top
+# and restore the app folder layout the wrapper expects.
+if [ -f "$APPDIR/usr/bin/EZManifest" ] && [ "$APPDIR/usr/bin/EZManifest" -ef "$APPBIN" ]; then
+  mv "$APPDIR/usr/bin/EZManifest" "$APPBIN"
+fi
+printf '#!/usr/bin/env bash\nDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\nexec "$DIR/app/EZManifest" "$@"\n' > "$APPDIR/usr/bin/EZManifest"
+chmod +x "$APPDIR/usr/bin/EZManifest"
 
 echo "AppImage built:"
 ls -la "$OUTDIR"/*.AppImage
