@@ -27,6 +27,9 @@ public partial class SettingsViewModel : ObservableObject
     private bool _useProton;
 
     [ObservableProperty]
+    private string _protonGlobalPrefixPath = string.Empty;
+
+    [ObservableProperty]
     private int _maxConcurrentChunks = AppSettings.DefaultMaxConcurrentChunks;
 
     [ObservableProperty]
@@ -52,6 +55,7 @@ public partial class SettingsViewModel : ObservableObject
         DownloadPath = settings.DownloadPath;
         UseProton = settings.UseProton;
         ProtonVersion = settings.ProtonVersion;
+        ProtonGlobalPrefixPath = settings.ProtonGlobalPrefixPath;
         MaxConcurrentChunks = settings.MaxConcurrentChunks;
         ProtonVersions.Clear();
         ProtonVersions.Add(ProtonService.AutoVersion);
@@ -91,6 +95,19 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnProtonVersionChanged(string value)
     {
         _ = _settingsService.UpdateAsync(settings => settings.ProtonVersion = value);
+    }
+
+    partial void OnProtonGlobalPrefixPathChanged(string value)
+    {
+        _ = _settingsService.UpdateAsync(settings => settings.ProtonGlobalPrefixPath = value?.Trim() ?? string.Empty);
+    }
+
+    [RelayCommand]
+    private async Task BrowsePrefixPathAsync()
+    {
+        string? folder = await _filePicker.PickFolderAsync("Select global WINE prefix folder");
+        if (!string.IsNullOrWhiteSpace(folder))
+            ProtonGlobalPrefixPath = folder;
     }
 
     partial void OnMaxConcurrentChunksChanged(int value)

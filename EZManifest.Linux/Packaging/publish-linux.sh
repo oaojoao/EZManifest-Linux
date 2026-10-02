@@ -10,9 +10,7 @@ dotnet publish "$ROOT/EZManifest.Linux.csproj" \
   -c Release \
   -r linux-x64 \
   --self-contained true \
-  -p:PublishSingleFile=true \
-  -p:IncludeNativeLibrariesForSelfExtract=true \
-  -p:EnableCompressionInSingleFile=true \
+  -p:PublishSingleFile=false \
   -p:PublishTrimmed=false \
   -o "$OUT"
 

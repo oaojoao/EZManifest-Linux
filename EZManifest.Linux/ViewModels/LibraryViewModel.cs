@@ -257,6 +257,40 @@ public partial class LibraryViewModel : ObservableObject
         }
     }
 
+    partial void OnSelectedGameChanged(GameEntry? value)
+    {
+        if (value is not null)
+            _ = LoadDetailAsync(value);
+    }
+
+    [RelayCommand]
+    private async Task SaveGamePrefixAsync(GameEntry game)
+    {
+        if (game is null)
+            return;
+        try
+        {
+            await _gameLibrary.SaveAsync(_allGames);
+            StatusText = $"WINE prefix for {game.Name} saved";
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, $"[Library] Could not save prefix for '{game.Name}'");
+        }
+    }
+
+    [RelayCommand]
+    private async Task BrowseGamePrefixAsync(GameEntry game)
+    {
+        if (game is null)
+            return;
+        string? folder = await _filePicker.PickFolderAsync($"Select WINE prefix for {game.Name}");
+        if (string.IsNullOrWhiteSpace(folder))
+            return;
+        game.ProtonPrefixPath = folder;
+        await _gameLibrary.SaveAsync(_allGames);
+    }
+
     [RelayCommand]
     private void OpenFolder(GameEntry game)
     {

@@ -35,6 +35,8 @@ public sealed class GameEntry : INotifyPropertyChanged
 
     /// <summary>Command-line arguments passed when launching the game.</summary>
     public string LaunchOptions { get; set; } = string.Empty;
+    /// <summary>Per-game WINE prefix override. Empty = use the app-level Proton prefix setting.</summary>
+    public string ProtonPrefixPath { get; set; } = string.Empty;
     /// <summary>Install folder for this game (where files are downloaded).</summary>
     public string InstallPath { get; set; } = string.Empty;
     /// <summary>True after a download finishes; false for library-only / pending install.</summary>

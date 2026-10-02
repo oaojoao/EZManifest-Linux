@@ -53,11 +53,13 @@ public class App : Avalonia.Application
         services.AddSingleton<PatchApplyService>();
         services.AddSingleton<ViewModels.LibraryViewModel>();
         services.AddSingleton<ViewModels.DownloadsViewModel>();
+        services.AddSingleton<ViewModels.DepotBoxViewModel>();
         services.AddSingleton<ViewModels.PatchViewModel>();
         services.AddSingleton<ViewModels.SettingsViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<Views.LibraryPage>();
         services.AddSingleton<Views.DownloadsPage>();
+        services.AddSingleton<Views.DepotBoxPage>();
         services.AddSingleton<Views.PatchPage>();
         services.AddSingleton<Views.SettingsPage>();
     }

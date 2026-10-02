@@ -159,6 +159,20 @@
           <TextBlock FontSize="10" Opacity="0.6" Text="ABOUT THE GAME" />
           <TextBlock Text="{Binding AboutTheGame}" TextWrapping="Wrap" Opacity="0.85" />
         </StackPanel>
+
+        <StackPanel Spacing="6" x:DataType="models:GameEntry" DataContext="{Binding SelectedGame}">
+          <TextBlock FontSize="10" Opacity="0.6" Text="WINE PREFIX (OVERRIDE)" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox Text="{Binding ProtonPrefixPath, Mode=TwoWay}" Width="420"
+                     Watermark="Empty = use the global prefix setting" />
+            <Button Content="Browse"
+                    Command="{Binding $parent[UserControl].DataContext.BrowseGamePrefixCommand}"
+                    CommandParameter="{Binding}" />
+            <Button Content="Save"
+                    Command="{Binding $parent[UserControl].DataContext.SaveGamePrefixCommand}"
+                    CommandParameter="{Binding}" />
+          </StackPanel>
+        </StackPanel>
       </StackPanel>
     </Border>
   </Grid>

@@ -55,9 +55,7 @@ public sealed class GameLauncher
                 "No Proton installation was found. Install Proton (or GE-Proton) via Steam, then try again.");
         }
 
-        string compatDataPath = ProtonService.GetCompatDataPath(
-            !string.IsNullOrWhiteSpace(game.InstallPath) ? game.InstallPath : workingDirectory,
-            game.AppId);
+        string compatDataPath = ResolvePrefixPath(game, workingDirectory);
 
         ProcessStartInfo psi = _protonService.BuildLaunchCommand(
             proton,
@@ -67,6 +65,31 @@ public sealed class GameLauncher
             compatDataPath);
         Process.Start(psi);
         AppLog.Write($"[Play] Launched '{game.Name}' via {proton.Name}");
+    }
+
+    /// <summary>
+    /// Prefix resolution order: per-game override, then the app-wide prefix from
+    /// Settings, then the default per-game compatdata folder next to the install.
+    /// </summary>
+    private string ResolvePrefixPath(GameEntry game, string workingDirectory)
+    {
+        string? perGame = game.ProtonPrefixPath?.Trim();
+        if (!string.IsNullOrWhiteSpace(perGame))
+        {
+            Directory.CreateDirectory(perGame);
+            return perGame;
+        }
+
+        string? settings = _settingsService.LoadAsync().GetAwaiter().GetResult().ProtonGlobalPrefixPath?.Trim();
+        if (!string.IsNullOrWhiteSpace(settings))
+        {
+            Directory.CreateDirectory(settings);
+            return settings;
+        }
+
+        return ProtonService.GetCompatDataPath(
+            !string.IsNullOrWhiteSpace(game.InstallPath) ? game.InstallPath : workingDirectory,
+            game.AppId);
     }
 
     private static string? TryFindNativeLauncher(string? installPath)

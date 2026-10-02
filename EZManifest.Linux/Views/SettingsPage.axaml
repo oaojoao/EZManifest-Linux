@@ -60,6 +60,12 @@
             <ComboBox ItemsSource="{Binding ProtonVersions}" SelectedItem="{Binding ProtonVersion, Mode=TwoWay}"
                       MinWidth="220" VerticalAlignment="Center" />
           </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+            <TextBlock Text="Global WINE prefix (optional)" VerticalAlignment="Center" Opacity="0.8" />
+            <TextBox Text="{Binding ProtonGlobalPrefixPath, Mode=TwoWay}" Width="360"
+                     Watermark="Empty = one prefix per game" />
+            <Button Content="Browse" Command="{Binding BrowsePrefixPathCommand}" />
+          </StackPanel>
         </StackPanel>
       </Border>
 

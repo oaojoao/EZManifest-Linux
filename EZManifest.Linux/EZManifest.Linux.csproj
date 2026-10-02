@@ -69,6 +69,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
     <PackageReference Include="SharpCompress" Version="0.50.4" />
     <PackageReference Include="SteamKit2" Version="3.4.0" />
+    <PackageReference Include="WebViewControl-Avalonia" Version="3.120.11" />
   </ItemGroup>
 
   <ItemGroup>
