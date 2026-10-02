@@ -66,6 +66,11 @@
                      Watermark="Empty = one prefix per game" />
             <Button Content="Browse" Command="{Binding BrowsePrefixPathCommand}" />
           </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+            <TextBlock Text="Proton env vars (optional)" VerticalAlignment="Center" Opacity="0.8" />
+            <TextBox Text="{Binding ProtonEnvironmentVariables, Mode=TwoWay}" Width="360"
+                     Watermark="e.g. PROTON_LOG=1 DXVK_HUD=1 PROTON_USE_WINED3D=1" />
+          </StackPanel>
         </StackPanel>
       </Border>
 

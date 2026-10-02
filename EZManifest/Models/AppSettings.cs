@@ -60,4 +60,9 @@ public sealed class AppSettings
     public string ProtonGlobalPrefixPath { get; set; } = string.Empty;
     /// <summary>Per-game WINE prefix override. Empty = use the global setting.</summary>
     public string ProtonPrefixPath { get; set; } = string.Empty;
+    /// <summary>
+    /// Extra environment variables passed to every Proton game launch, as a
+    /// whitespace-separated "KEY=VALUE" list (e.g. "PROTON_LOG=1 DXVK_HUD=1").
+    /// </summary>
+    public string ProtonEnvironmentVariables { get; set; } = string.Empty;
 }

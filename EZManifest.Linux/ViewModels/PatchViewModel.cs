@@ -9,6 +9,11 @@ namespace EZManifest.Linux.ViewModels;
 
 public partial class PatchViewModel : ObservableObject
 {
+    /// <summary>GameCopyWorld home loaded by the embedded patch browser.</summary>
+    public const string GameCopyWorldHomeUrl = "https://gamecopyworld.eu/games/index.php";
+
+    private static readonly string[] PatchArchiveExtensions = [".zip", ".7z", ".rar"];
+
     private readonly PatchApplyService _patchApply;
     private readonly AppMessageBoxService _messageBoxService;
     private readonly FileExplorerPickerService _filePicker;
@@ -16,11 +21,17 @@ public partial class PatchViewModel : ObservableObject
 
     public ObservableCollection<GameEntry> InstalledGames { get; } = [];
 
+    /// <summary>Patch archives downloaded through the embedded GameCopyWorld browser.</summary>
+    public ObservableCollection<BrowserDownloadItem> BrowserDownloads { get; } = [];
+
     [ObservableProperty]
     private string _statusText = "Pick a downloaded patch archive (.zip/.7z/.rar), then choose the game to patch.";
 
     [ObservableProperty]
     private bool _isBusy;
+
+    /// <summary>Set by the page once the WebView control is created; the VM tells it to navigate.</summary>
+    public Action<string>? NavigateRequested;
 
     private string? _patchArchivePath;
     private string? _extractedPatchRoot;
@@ -71,10 +82,11 @@ public partial class PatchViewModel : ObservableObject
         }
     }
 
-    private async Task ExtractPatchAsync()
+    /// <summary>Extracts the pending archive. Returns true when the patch is ready to apply.</summary>
+    private async Task<bool> ExtractPatchAsync()
     {
         if (string.IsNullOrWhiteSpace(_patchArchivePath))
-            return;
+            return false;
         IsBusy = true;
         StatusText = "Extracting patch archive...";
         try
@@ -84,12 +96,14 @@ public partial class PatchViewModel : ObservableObject
                 null,
                 CancellationToken.None);
             StatusText = "Patch extracted. Select the game to patch, then Apply.";
+            return true;
         }
         catch (Exception ex)
         {
             AppLog.Write(ex, "[Patch] Extract failed");
             StatusText = $"Extract failed: {AppLog.GetRootMessage(ex)}";
             await _messageBoxService.ShowAsync("Patch extract failed", AppLog.GetRootMessage(ex));
+            return false;
         }
         finally
         {
@@ -106,6 +120,15 @@ public partial class PatchViewModel : ObservableObject
             return;
         }
 
+        await SelectTargetAndApplyAsync();
+    }
+
+    /// <summary>
+    /// Asks which installed game the extracted patch belongs to, then applies it.
+    /// Called both from "Apply patch" and right after a GameCopyWorld download.
+    /// </summary>
+    private async Task SelectTargetAndApplyAsync()
+    {
         var games = await _gameLibrary.LoadAsync();
         var installed = games
             .Where(g => g.IsInstalled && !string.IsNullOrWhiteSpace(g.InstallPath))
@@ -165,6 +188,85 @@ public partial class PatchViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    public void OnDownloadStarted(string fullPath)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var item = new BrowserDownloadItem
+            {
+                FileName = Path.GetFileName(fullPath),
+                FullPath = fullPath
+            };
+            BrowserDownloads.Insert(0, item);
+            StatusText = $"Downloading {item.FileName}...";
+        });
+    }
+
+    public void OnDownloadProgress(string fullPath, long received, long total)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            if (item is null)
+            {
+                item = new BrowserDownloadItem
+                {
+                    FileName = Path.GetFileName(fullPath),
+                    FullPath = fullPath
+                };
+                BrowserDownloads.Insert(0, item);
+            }
+            item.ReceivedBytes = received;
+            item.TotalBytes = total;
+        });
+    }
+
+    public async void OnDownloadCompleted(string fullPath)
+    {
+        try
+        {
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+                if (item is not null)
+                    item.IsComplete = true;
+
+                // A finished archive from GameCopyWorld becomes the pending patch:
+                // extract it, ask which game it belongs to, and apply it right away.
+                if (PatchArchiveExtensions.Contains(Path.GetExtension(fullPath), StringComparer.OrdinalIgnoreCase))
+                {
+                    if (item is not null)
+                        item.Status = "Extracting...";
+                    _patchArchivePath = fullPath;
+                    if (await ExtractPatchAsync())
+                        await SelectTargetAndApplyAsync();
+                }
+                else
+                {
+                    StatusText = $"Download finished: {fullPath}";
+                }
+
+                if (item is not null)
+                    item.Status = "Done";
+            });
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "[Patch] Download completion failed");
+        }
+    }
+
+    public void OnDownloadCancelled(string fullPath)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            if (item is not null)
+                item.Status = "Cancelled";
+            StatusText = "Download cancelled";
+        });
     }
 }
 

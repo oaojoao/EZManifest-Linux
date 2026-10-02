@@ -30,15 +30,24 @@ public sealed class GameLauncher
                             exePath.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase);
         string? native = TryFindNativeLauncher(game.InstallPath);
 
+        // Optional KEY=VALUE overrides (e.g. PROTON_LOG=1, DXVK_HUD=1, MANGOHUD=1):
+        // the global setting first, then the per-game override so it wins on the
+        // same key. Applies to both Proton and native Linux launches.
+        var envOverrides = new Dictionary<string, string?>();
+        foreach (var (key, value) in ParseEnvironmentVariables(settings.ProtonEnvironmentVariables))
+            envOverrides[key] = value;
+        foreach (var (key, value) in ParseEnvironmentVariables(game.ProtonEnvironmentVariables))
+            envOverrides[key] = value;
+
         if (!isWindowsExe && native is not null)
         {
-            LaunchDirect(native, Path.GetDirectoryName(native) ?? workingDirectory, game.LaunchOptions);
+            LaunchDirect(native, Path.GetDirectoryName(native) ?? workingDirectory, game.LaunchOptions, envOverrides);
             return;
         }
 
         if (!isWindowsExe)
         {
-            LaunchDirect(exePath, workingDirectory, game.LaunchOptions);
+            LaunchDirect(exePath, workingDirectory, game.LaunchOptions, envOverrides);
             return;
         }
 
@@ -64,13 +73,68 @@ public sealed class GameLauncher
             game.LaunchOptions ?? string.Empty,
             compatDataPath);
 
+        // Merge the KEY=VALUE overrides resolved above into the Proton environment.
+        foreach (var pair in envOverrides)
+            psi.Environment[pair.Key] = pair.Value;
+
         string logPath = Path.Combine(AppPaths.DataDirectory, "game-launch.log");
+        // psi.Arguments ("run <exe> <launch options>") targets a direct Process.Start;
+        // for the detached shell line each token is rebuilt with POSIX-safe quoting.
         string command = $"setsid {Quote(psi.FileName)} run {Quote(exePath)}" +
             (string.IsNullOrWhiteSpace(game.LaunchOptions) ? string.Empty : $" {game.LaunchOptions}") +
             $" >> {Quote(logPath)} 2>&1";
 
+        TraceLaunch(logPath, command, psi.Environment);
         StartDetached(command, psi.WorkingDirectory, psi.Environment);
         AppLog.Write($"[Play] Launched '{game.Name}' via {proton.Name} (detached session)");
+    }
+
+    /// <summary>
+    /// Appends the exact shell command and the launch-relevant environment to
+    /// game-launch.log so every Proton/native launch can be verified after the fact.
+    /// </summary>
+    private static void TraceLaunch(string logPath, string command, IDictionary<string, string?>? environment)
+    {
+        try
+        {
+            string env = environment is null
+                ? string.Empty
+                : " # " + string.Join(" ", environment
+                    .Where(kv =>
+                        kv.Key.StartsWith("STEAM_", StringComparison.Ordinal) ||
+                        kv.Key.StartsWith("PROTON_", StringComparison.Ordinal) ||
+                        kv.Key.StartsWith("WINE", StringComparison.Ordinal) ||
+                        kv.Key.StartsWith("DXVK", StringComparison.Ordinal) ||
+                        kv.Key.StartsWith("VKD", StringComparison.Ordinal) ||
+                        kv.Key.StartsWith("MANGO", StringComparison.Ordinal) ||
+                        kv.Key.StartsWith("GAMESCOPE", StringComparison.Ordinal))
+                    .Select(kv => $"{kv.Key}={kv.Value}"));
+            File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {command}{env}\n");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[Play] Could not write the launch trace: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Parses a whitespace-separated "KEY=VALUE" list. Tokens without '=' are
+    /// skipped; later tokens override earlier ones.
+    /// </summary>
+    private static IEnumerable<(string Key, string Value)> ParseEnvironmentVariables(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            yield break;
+
+        foreach (string token in text.Split(
+                     (char[]?)null,
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            int eq = token.IndexOf('=');
+            if (eq <= 0)
+                continue;
+            yield return (token[..eq], token[(eq + 1)..]);
+        }
     }
 
     /// <summary>
@@ -100,6 +164,12 @@ public sealed class GameLauncher
             foreach (var pair in environment)
                 detached.Environment[pair.Key] = pair.Value;
         }
+        // Host wrappers (VSCode terminals, AppImages, flatpak) point LD_LIBRARY_PATH
+        // and LD_PRELOAD at their own bundled runtimes. A game must resolve libraries
+        // against the system instead: inherited values break the Vulkan driver inside
+        // wine, DXVK cannot create an instance, and the game crashes at launch.
+        detached.Environment.Remove("LD_LIBRARY_PATH");
+        detached.Environment.Remove("LD_PRELOAD");
         Process.Start(detached);
     }
 
@@ -144,14 +214,19 @@ public sealed class GameLauncher
     private static string Quote(string value) =>
         "'" + value.Replace("'", "'\''") + "'";
 
-    private static void LaunchDirect(string fileName, string workingDirectory, string? arguments)
+    private static void LaunchDirect(
+        string fileName,
+        string workingDirectory,
+        string? arguments,
+        Dictionary<string, string?>? environment = null)
     {
         string logPath = Path.Combine(AppPaths.DataDirectory, "game-launch.log");
         string command = $"setsid {BuildDirectInvocation(fileName)}" +
             (string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}") +
             $" >> {Quote(logPath)} 2>&1";
 
-        StartDetached(command, workingDirectory);
+        TraceLaunch(logPath, command, environment);
+        StartDetached(command, workingDirectory, environment);
         AppLog.Write($"[Play] Launched directly (detached session): {fileName}");
     }
 

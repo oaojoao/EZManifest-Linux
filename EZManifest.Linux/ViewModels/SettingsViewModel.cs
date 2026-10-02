@@ -30,6 +30,9 @@ public partial class SettingsViewModel : ObservableObject
     private string _protonGlobalPrefixPath = string.Empty;
 
     [ObservableProperty]
+    private string _protonEnvironmentVariables = string.Empty;
+
+    [ObservableProperty]
     private int _maxConcurrentChunks = AppSettings.DefaultMaxConcurrentChunks;
 
     [ObservableProperty]
@@ -56,6 +59,7 @@ public partial class SettingsViewModel : ObservableObject
         UseProton = settings.UseProton;
         ProtonVersion = settings.ProtonVersion;
         ProtonGlobalPrefixPath = settings.ProtonGlobalPrefixPath;
+        ProtonEnvironmentVariables = settings.ProtonEnvironmentVariables;
         MaxConcurrentChunks = settings.MaxConcurrentChunks;
         ProtonVersions.Clear();
         ProtonVersions.Add(ProtonService.AutoVersion);
@@ -100,6 +104,11 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnProtonGlobalPrefixPathChanged(string value)
     {
         _ = _settingsService.UpdateAsync(settings => settings.ProtonGlobalPrefixPath = value?.Trim() ?? string.Empty);
+    }
+
+    partial void OnProtonEnvironmentVariablesChanged(string value)
+    {
+        _ = _settingsService.UpdateAsync(settings => settings.ProtonEnvironmentVariables = value?.Trim() ?? string.Empty);
     }
 
     [RelayCommand]

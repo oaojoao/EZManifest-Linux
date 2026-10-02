@@ -39,6 +39,14 @@ public partial class LibraryViewModel : ObservableObject
     [ObservableProperty]
     private string? _selectedGameLogoPath;
 
+    /// <summary>Proton settings popup content for the currently selected game.</summary>
+    [ObservableProperty]
+    private ProtonSettingsViewModel? _protonSettings;
+
+    /// <summary>Whether the Proton settings popup is shown over the library.</summary>
+    [ObservableProperty]
+    private bool _protonSettingsPopupOpen;
+
     [ObservableProperty]
     private ObservableCollection<GameMediaItem> _selectedGameMedia = [];
 
@@ -191,11 +199,13 @@ public partial class LibraryViewModel : ObservableObject
         }
 
         SelectedGameMedia.Clear();
+        OnPropertyChanged(nameof(HasSelectedGameMedia));
         if (game.MediaLoaded)
         {
             foreach (var item in game.MediaItems.Take(6))
                 SelectedGameMedia.Add(item);
         }
+        OnPropertyChanged(nameof(HasSelectedGameMedia));
         OnPropertyChanged(nameof(SelectedGame));
     }
 
@@ -280,6 +290,42 @@ public partial class LibraryViewModel : ObservableObject
 
     public bool HasSelectedGame => SelectedGame is not null;
 
+    /// <summary>True while the detail panel has at least one media item to show.</summary>
+    public bool HasSelectedGameMedia => SelectedGameMedia.Count > 0;
+
+    /// <summary>True while the detail panel has a hero image to show.</summary>
+    public bool HasSelectedGameHero => !string.IsNullOrWhiteSpace(SelectedGameHeroPath);
+
+    partial void OnSelectedGameHeroPathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedGameHero));
+    }
+
+    [RelayCommand]
+    private void OpenProtonSettings(GameEntry game)
+    {
+        if (game is null)
+            return;
+        ProtonSettings = new ProtonSettingsViewModel(game, _filePicker, async () =>
+        {
+            try
+            {
+                await _gameLibrary.SaveAsync(_allGames);
+                StatusText = $"Proton settings for {game.Name} saved";
+            }
+            catch (Exception ex)
+            {
+                AppLog.Write(ex, $"[Library] Could not save Proton settings for '{game.Name}'");
+                await _messageBoxService.ShowAsync("Could not save Proton settings", ex.Message);
+            }
+            finally
+            {
+                ProtonSettingsPopupOpen = false;
+            }
+        });
+        ProtonSettingsPopupOpen = true;
+    }
+
     [RelayCommand]
     private void CloseDetail()
     {
@@ -288,34 +334,8 @@ public partial class LibraryViewModel : ObservableObject
         SelectedGameHeroPath = null;
         SelectedGameLogoPath = null;
         SelectedGameMedia.Clear();
-    }
-
-    [RelayCommand]
-    private async Task SaveGamePrefixAsync(GameEntry game)
-    {
-        if (game is null)
-            return;
-        try
-        {
-            await _gameLibrary.SaveAsync(_allGames);
-            StatusText = $"WINE prefix for {game.Name} saved";
-        }
-        catch (Exception ex)
-        {
-            AppLog.Write(ex, $"[Library] Could not save prefix for '{game.Name}'");
-        }
-    }
-
-    [RelayCommand]
-    private async Task BrowseGamePrefixAsync(GameEntry game)
-    {
-        if (game is null)
-            return;
-        string? folder = await _filePicker.PickFolderAsync($"Select WINE prefix for {game.Name}");
-        if (string.IsNullOrWhiteSpace(folder))
-            return;
-        game.ProtonPrefixPath = folder;
-        await _gameLibrary.SaveAsync(_allGames);
+        OnPropertyChanged(nameof(HasSelectedGameMedia));
+        ProtonSettingsPopupOpen = false;
     }
 
     [RelayCommand]

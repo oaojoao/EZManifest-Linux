@@ -37,6 +37,11 @@ public sealed class GameEntry : INotifyPropertyChanged
     public string LaunchOptions { get; set; } = string.Empty;
     /// <summary>Per-game WINE prefix override. Empty = use the app-level Proton prefix setting.</summary>
     public string ProtonPrefixPath { get; set; } = string.Empty;
+    /// <summary>
+    /// Per-game override of the Proton environment variables setting, as a
+    /// whitespace-separated "KEY=VALUE" list. Empty = use the global setting.
+    /// </summary>
+    public string ProtonEnvironmentVariables { get; set; } = string.Empty;
     /// <summary>Install folder for this game (where files are downloaded).</summary>
     public string InstallPath { get; set; } = string.Empty;
     /// <summary>True after a download finishes; false for library-only / pending install.</summary>
@@ -102,7 +107,7 @@ public sealed class GameEntry : INotifyPropertyChanged
     public IReadOnlyList<string> AboutTheGameParagraphs =>
         string.IsNullOrWhiteSpace(AboutTheGame)
             ? []
-            : AboutTheGame.Split(['\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            : AboutTheGame.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     [JsonIgnore]
     public ObservableCollection<GameMediaItem> MediaItems { get; } = new();
