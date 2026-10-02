@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:vm="using:EZManifest.Linux.ViewModels"
+            x:Class="EZManifest.Linux.Views.PatchTargetSelectionDialog"
+            x:DataType="vm:PatchTargetSelectionViewModel">
+    <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
+        <Border BorderBrush="#3a3a40" BorderThickness="1" CornerRadius="4" Padding="8" MaxHeight="320">
+            <ScrollViewer>
+                <ListBox ItemsSource="{Binding Games}"
+                         SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" />
+            </ScrollViewer>
+        </Border>
+    </StackPanel>
+</UserControl>

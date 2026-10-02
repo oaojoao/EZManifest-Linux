@@ -139,6 +139,66 @@ public sealed class PatchApplyService
         // Zone.Identifier ADS is Windows-only; nothing to do on Linux.
     }
 
+    public static string? FindFilesFolder(string extractedRoot)
+    {
+        string direct = Path.Combine(extractedRoot, "Files");
+        if (Directory.Exists(direct))
+            return direct;
+        foreach (string dir in Directory.EnumerateDirectories(extractedRoot, "*", SearchOption.AllDirectories))
+        {
+            if (string.Equals(Path.GetFileName(dir), "Files", StringComparison.OrdinalIgnoreCase))
+                return dir;
+        }
+        return null;
+    }
+
+    public static string? FindPatchSourceFolder(string extractedRoot)
+    {
+        string? files = FindFilesFolder(extractedRoot);
+        if (files is not null)
+            return files;
+        string[] top = Directory.GetDirectories(extractedRoot);
+        return top.Length == 1 ? top[0] : null;
+    }
+
+    public async Task<int> CopyFilesOverAsync(
+        string filesFolder,
+        string gameFolder,
+        IProgress<PatchApplyProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        filesFolder = Path.GetFullPath(filesFolder);
+        gameFolder = Path.GetFullPath(gameFolder);
+        if (!Directory.Exists(filesFolder))
+            throw new DirectoryNotFoundException("Incompatible game fix archive for EZManifest.");
+        if (!Directory.Exists(gameFolder))
+            throw new DirectoryNotFoundException($"Game folder was not found:\n{gameFolder}");
+        int copied = 0;
+        await Task.Run(() =>
+        {
+            var sources = Directory.EnumerateFiles(filesFolder, "*", SearchOption.AllDirectories).ToList();
+            int total = sources.Count;
+            progress?.Report(new PatchApplyProgress("Applying", 0, total, null));
+            foreach (string source in sources)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string relative = Path.GetRelativePath(filesFolder, source);
+                if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
+                    continue;
+                string dest = Path.GetFullPath(Path.Combine(gameFolder, relative));
+                if (!dest.StartsWith(gameFolder, StringComparison.Ordinal))
+                    continue;
+                string? destDir = Path.GetDirectoryName(dest);
+                if (!string.IsNullOrWhiteSpace(destDir))
+                    Directory.CreateDirectory(destDir);
+                File.Copy(source, dest, overwrite: true);
+                copied++;
+                progress?.Report(new PatchApplyProgress("Applying", copied, total, relative));
+            }
+        }, cancellationToken);
+        return copied;
+    }
+
     public static string DownloadsFolder => Path.Combine(AppPaths.DataDirectory, "PatchDownloads");
     public static string ExtractFolder => Path.Combine(AppPaths.DataDirectory, "PatchExtract");
 

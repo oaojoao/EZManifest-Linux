@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using EZManifest.Linux.Views;
 
 namespace EZManifest.Linux.Services;
 
@@ -91,6 +92,78 @@ public sealed class AppMessageBoxService
 
                 dialog.Closed += (_, _) => completion.TrySetResult(ContentDialogResult.None);
 
+                dialog.Show(window);
+                var result = await completion.Task;
+                if (dialog.IsVisible)
+                    dialog.Close();
+                return result;
+            });
+        }
+        finally
+        {
+            _dialogGate.Release();
+        }
+    }
+
+    public Task<ContentDialogResult> ShowDialogAsync(
+        UserControl content,
+        string primaryButtonText,
+        string closeButtonText)
+    {
+        return ShowCustomAsync("EZManifest", content, primaryButtonText, closeButtonText);
+    }
+
+    public async Task<ContentDialogResult> ShowCustomAsync(
+        string title,
+        Avalonia.Controls.Control content,
+        string? primaryButtonText,
+        string closeButtonText)
+    {
+        await _dialogGate.WaitAsync();
+        try
+        {
+            var window = _windowProvider.Window
+                ?? throw new InvalidOperationException("Main window is not available yet.");
+            return await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var completion = new TaskCompletionSource<ContentDialogResult>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                var buttons = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 12,
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+                void AddButton(string label, ContentDialogResult result)
+                {
+                    var button = new Button { Content = label, MinWidth = 110 };
+                    button.Click += (_, _) => completion.TrySetResult(result);
+                    buttons.Children.Add(button);
+                }
+                AddButton(primaryButtonText, ContentDialogResult.Primary);
+                AddButton(closeButtonText, ContentDialogResult.None);
+                var panel = new StackPanel { Spacing = 16 };
+                panel.Children.Add(content);
+                panel.Children.Add(buttons);
+                var dialog = new Window
+                {
+                    Title = title,
+                    SizeToContent = SizeToContent.Height,
+                    Width = 620,
+                    MaxWidth = window.Bounds.Width * 0.9,
+                    CanResize = false,
+                    ShowInTaskbar = false,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new Border
+                    {
+                        Padding = new Thickness(24),
+                        BorderThickness = new Thickness(1),
+                        BorderBrush = Brushes.Gray,
+                        CornerRadius = new CornerRadius(8),
+                        Child = panel
+                    }
+                };
+                dialog.Closed += (_, _) => completion.TrySetResult(ContentDialogResult.None);
                 dialog.Show(window);
                 var result = await completion.Task;
                 if (dialog.IsVisible)

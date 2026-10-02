@@ -40,6 +40,7 @@
     <Compile Include="..\EZManifest\Services\AppPaths.cs" Link="Shared\Services\AppPaths.cs" />
     <Compile Include="..\EZManifest\Services\AppSettingsService.cs" Link="Shared\Services\AppSettingsService.cs" />
     <Compile Include="..\EZManifest\Services\DebugLogService.cs" Link="Shared\Services\DebugLogService.cs" />
+    <Compile Include="..\EZManifest\Services\DriveSpace.cs" Link="Shared\Services\DriveSpace.cs" />
     <Compile Include="..\EZManifest\Services\DownloadPauseState.cs" Link="Shared\Services\DownloadPauseState.cs" />
     <Compile Include="..\EZManifest\Services\GameDownload.cs" Link="Shared\Services\GameDownload.cs" />
     <Compile Include="..\EZManifest\Services\GameInstallSizeService.cs" Link="Shared\Services\GameInstallSizeService.cs" />

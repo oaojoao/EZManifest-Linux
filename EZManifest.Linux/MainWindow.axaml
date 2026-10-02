@@ -11,6 +11,7 @@
                 <TextBlock Text="EZManifest" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
                 <Button x:Name="NavLibrary"    Content="Library"    Classes="nav" Click="OnNavigateLibrary" />
                 <Button x:Name="NavDownloads" Content="Downloads" Classes="nav" Click="OnNavigateDownloads" />
+            <Button x:Name="NavPatch"      Content="Patch"      Classes="nav" Click="OnNavigatePatch" />
                 <Button x:Name="NavSettings"   Content="Settings"   Classes="nav" Click="OnNavigateSettings" />
             </StackPanel>
         </Border>
