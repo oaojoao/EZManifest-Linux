@@ -17,6 +17,8 @@ public class App : Avalonia.Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        EZManifest.Services.AppLog.Write(
+            $"EZManifest Linux started (version {typeof(App).Assembly.GetName().Version})");
         if (ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = Services.GetRequiredService<MainWindow>();

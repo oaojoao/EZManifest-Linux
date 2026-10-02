@@ -2,15 +2,19 @@ using System.Diagnostics;
 
 namespace EZManifest.Services;
 
-/// <summary>Thread-safe in-app log that also mirrors to Debug output.</summary>
+/// <summary>Thread-safe in-app log that also mirrors to Debug output and app.log.</summary>
 public static class AppLog
 {
+    private const long MaxLogBytes = 5 * 1024 * 1024;
+    private static readonly object FileSync = new();
+
     public static event Action<string>? LineWritten;
 
     public static void Write(string message)
     {
         string line = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
         Debug.WriteLine(line);
+        AppendToFile(line);
 
         Action<string>? handlers = LineWritten;
         if (handlers is null)
@@ -26,6 +30,35 @@ public static class AppLog
             catch
             {
             }
+        }
+    }
+
+    /// <summary>
+    /// Mirrors every line to app.log in the user data folder so launches,
+    /// downloads and crashes can be diagnosed after the fact. The file rotates
+    /// to app.log.old once it passes 5 MB. Logging must never break the app:
+    /// every failure here is swallowed.
+    /// </summary>
+    private static void AppendToFile(string line)
+    {
+        try
+        {
+            lock (FileSync)
+            {
+                string path = Path.Combine(AppPaths.DataDirectory, "app.log");
+                var info = new FileInfo(path);
+                if (info.Exists && info.Length > MaxLogBytes)
+                {
+                    string old = path + ".old";
+                    if (File.Exists(old))
+                        File.Delete(old);
+                    File.Move(path, old);
+                }
+                File.AppendAllText(path, line + Environment.NewLine);
+            }
+        }
+        catch
+        {
         }
     }
 

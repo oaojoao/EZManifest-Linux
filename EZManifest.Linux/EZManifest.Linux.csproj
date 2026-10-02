@@ -9,6 +9,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <BuiltInComSupport>false</BuiltInComSupport>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <FileVersion>1.2.2.0</FileVersion>
+    <AssemblyVersion>1.2.2.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

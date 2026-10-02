@@ -14,10 +14,21 @@
       <Setter Property="BorderBrush" Value="#34343c" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="RenderTransform">
+        <TranslateTransform />
+      </Setter>
+      <Setter Property="Transitions">
+        <Transitions>
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut" />
+        </Transitions>
+      </Setter>
     </Style>
     <Style Selector="Border.card:pointerover">
       <Setter Property="Background" Value="#26262e" />
-      <Setter Property="BorderBrush" Value="#4a4a55" />
+      <Setter Property="BorderBrush" Value="#18C46A" />
+      <Setter Property="RenderTransform">
+        <TranslateTransform Y="-3" />
+      </Setter>
     </Style>
     <Style Selector="Border.detail">
       <Setter Property="Background" Value="#1e1e24" />
@@ -71,13 +82,18 @@
 
   <Grid RowDefinitions="Auto,*,Auto" Margin="16,12,16,16">
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="8,0,0,12">
-      <TextBox Text="{Binding SearchText, Mode=TwoWay}" Watermark="Search games..." Width="260" />
-      <Button Content="Refresh" Command="{Binding RefreshCommand}" />
-      <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Opacity="0.6" />
+      <TextBox Text="{Binding SearchText, Mode=TwoWay}" Watermark="Search games..." Width="280" />
+      <Button Classes="iconbtn" Width="40" Height="40" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh library">
+        <PathIcon Width="16" Height="16"
+                  Data="M17.65,6.35A8,8 0 1,0 19.73,14H17.65A6,6 0 1,1 12,6A6,6 0 0,1 16.24,7.76L13,11H20V4L17.65,6.35Z" />
+      </Button>
+      <Border Background="#26262e" CornerRadius="10" Padding="12,5" VerticalAlignment="Center">
+        <TextBlock Text="{Binding StatusText}" FontSize="12" Opacity="0.8" />
+      </Border>
     </StackPanel>
 
-    <ScrollViewer Grid.Row="1">
-      <ItemsControl ItemsSource="{Binding FilteredApps}">
+    <ScrollViewer Grid.Row="1" x:Name="LibraryScroll" ScrollChanged="OnLibraryScrollChanged">
+      <ItemsControl ItemsSource="{Binding ShownGames}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <WrapPanel />
@@ -123,9 +139,19 @@
       </ItemsControl>
     </ScrollViewer>
 
+    <StackPanel Grid.Row="1" IsVisible="{Binding !HasGames}" VerticalAlignment="Center"
+                HorizontalAlignment="Center" Spacing="10">
+      <PathIcon Width="40" Height="40" Opacity="0.3"
+                Data="M3,5H11V11H3M13,5H21V11H13M3,13H11V19H3M13,13H21V19H13Z" />
+      <TextBlock Text="No games yet" FontSize="16" FontWeight="SemiBold" Opacity="0.7"
+                 HorizontalAlignment="Center" />
+      <TextBlock Text="Download a game from DepotBox or import a manifest archive from the Downloads page."
+                 FontSize="12" Opacity="0.5" HorizontalAlignment="Center" TextWrapping="Wrap" />
+    </StackPanel>
+
     <Border Grid.Row="2" Classes="detail" Margin="0,12,0,0"
             IsVisible="{Binding HasSelectedGame}">
-      <ScrollViewer MaxHeight="460" Padding="20,14,20,16"
+      <ScrollViewer MaxHeight="560" Padding="20,14,20,16"
                     HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="18" MaxWidth="980" HorizontalAlignment="Stretch">
           <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" x:DataType="models:GameEntry"
@@ -195,17 +221,19 @@
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="models:GameMediaItem">
-                  <Button Classes="mediabtn" Margin="0,0,8,8"
-                          Command="{Binding $parent[UserControl].DataContext.OpenMediaCommand}"
-                          CommandParameter="{Binding}">
-                    <Grid Width="200" Height="112" Background="#141419">
-                      <Image Source="{Binding ThumbnailUrl, Converter={StaticResource UrlToBitmap}}" Stretch="Uniform" />
-                      <Border Background="#99000000" CornerRadius="4" Padding="6,3"
-                              HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="6"
-                              IsVisible="{Binding IsVideo}">
-                        <TextBlock Text="▶ Video" FontSize="10" Foreground="White" />
-                      </Border>
-                    </Grid>
+                  <Button Classes="mediabtn" Margin="0,0,8,8" Click="OnOpenMedia"
+                          Tag="{Binding}" Cursor="Hand"
+                          ToolTip.Tip="View media">
+                    <Border Width="240" Height="135" Background="#141419" CornerRadius="6" ClipToBounds="True">
+                      <Grid>
+                        <Image Source="{Binding ThumbnailUrl, Converter={StaticResource UrlToBitmap}}" Stretch="Uniform" />
+                        <Border Background="#99000000" CornerRadius="4" Padding="7,3"
+                                HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8"
+                                IsVisible="{Binding IsVideo}">
+                          <TextBlock Text="▶ Video" FontSize="10" Foreground="White" />
+                        </Border>
+                      </Grid>
+                    </Border>
                   </Button>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -259,5 +287,22 @@
         </StackPanel>
       </Border>
     </Popup>
+
+    <Border Grid.RowSpan="3" IsVisible="{Binding IsMediaViewerOpen}" Background="#E6000000"
+            ZIndex="100" PointerPressed="OnMediaOverlayPressed">
+      <Grid RowDefinitions="Auto,*">
+        <Button Grid.Row="0" Classes="iconbtn" Width="40" Height="40" HorizontalAlignment="Right"
+                Margin="0,20,24,0" ToolTip.Tip="Close" Focusable="False"
+                Command="{Binding CloseMediaViewerCommand}">
+          <PathIcon Width="16" Height="16"
+                    Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+        </Button>
+        <Border Grid.Row="1" CornerRadius="8" ClipToBounds="True" Background="#141419"
+                HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24,8,24,24">
+          <Image Source="{Binding ViewedMediaImageUrl, Converter={StaticResource UrlToBitmap}}"
+                 Stretch="Uniform" MaxWidth="1100" MaxHeight="620" />
+        </Border>
+      </Grid>
+    </Border>
   </Grid>
 </UserControl>

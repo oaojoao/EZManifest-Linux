@@ -21,31 +21,31 @@
                 <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="12,24,12,0">
                     <Button x:Name="NavLibrary"    Classes="nav" Click="OnNavigateLibrary">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🎮" FontSize="15" />
+                            <PathIcon Width="16" Height="16" Data="M3,5H11V11H3M13,5H21V11H13M3,13H11V19H3M13,13H21V19H13Z" />
                             <TextBlock Text="Library" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavDepotBox" Classes="nav" Click="OnNavigateDepotBox">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🌐" FontSize="15" />
+                            <PathIcon Width="16" Height="16" Data="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14H16.36M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.56,13.34 9.5,12.68 9.5,12C9.5,11.32 9.56,10.65 9.66,10H14.34C14.43,10.65 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,4.03C13.17,5.63 14.11,7.58 14.66,9.53H9.34C9.89,7.58 10.83,5.63 12,4.03M5.08,16H8.03C8.35,17.25 8.81,18.45 9.41,19.56C7.57,18.93 6.04,17.65 5.08,16M8.03,8H5.08C6.04,6.34 7.57,5.06 9.41,4.44C8.81,5.55 8.35,6.75 8.03,8M4.26,14C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H7.64C7.56,10.66 7.5,11.32 7.5,12C7.5,12.68 7.56,13.34 7.64,14H4.26M12,19.97C10.83,18.36 9.89,16.41 9.34,14H14.66C14.11,16.41 13.17,18.36 12,19.97M18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44C16.43,5.07 17.96,6.34 18.92,8M12,2C7.58,2 4,5.58 4,10C4,14.42 7.58,18 12,18C16.42,18 20,14.42 20,10C20,5.58 16.42,2 12,2Z" />
                             <TextBlock Text="DepotBox" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavDownloads" Classes="nav" Click="OnNavigateDownloads">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="⬇️" FontSize="15" />
+                            <PathIcon Width="16" Height="16" Data="M11,2H13V14L18,9L19.4,10.4L12,17.8L4.6,10.4L6,9L11,14V2M4,20H20V22H4Z" />
                             <TextBlock Text="Downloads" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavPatch" Classes="nav" Click="OnNavigatePatch">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🩹" FontSize="15" />
+                            <PathIcon Width="16" Height="16" Data="M22.7,19L13.6,9.9C14.5,7.6 14,4.9 12.2,3C10.4,1.1 7.7,0.7 5.5,1.5L9.6,5.6L6.1,9.1L1.9,5C1,7.2 1.5,9.9 3.4,11.7C5.2,13.6 7.9,14.1 10.2,13.2L19.3,22.3L22.7,19Z" />
                             <TextBlock Text="Patch" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavSettings" Classes="nav" Click="OnNavigateSettings">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="⚙️" FontSize="15" />
+                            <PathIcon Width="16" Height="16" Data="M19.14,12.94C19.18,12.64 19.2,12.33 19.2,12C19.2,11.67 19.18,11.36 19.13,11.06L21.16,9.48C21.34,9.34 21.39,9.09 21.28,8.89L19.36,5.57C19.24,5.37 19,5.29 18.8,5.37L16.41,6.33C15.91,5.96 15.37,5.67 14.79,5.45L14.43,2.91C14.39,2.69 14.2,2.53 14,2.53H10.16C9.95,2.53 9.77,2.69 9.73,2.91L9.37,5.45C8.79,5.67 8.25,5.96 7.75,6.33L5.36,5.37C5.16,5.29 4.92,5.37 4.8,5.57L2.88,8.89C2.77,9.09 2.82,9.34 3,9.48L5.03,11.06C4.98,11.36 4.96,11.67 4.96,12C4.96,12.33 4.98,12.64 5.03,12.94L3,14.52C2.82,14.66 2.77,14.91 2.88,15.11L4.8,18.43C4.92,18.63 5.16,18.71 5.36,18.63L7.75,17.67C8.25,18.04 8.79,18.33 9.37,18.55L9.73,21.09C9.77,21.31 9.95,21.47 10.16,21.47H14C14.2,21.47 14.39,21.31 14.43,21.09L14.79,18.55C15.37,18.33 15.91,18.04 16.41,17.67L18.8,18.63C19,18.71 19.24,18.63 19.36,18.43L21.28,15.11C21.39,14.91 21.34,14.66 21.16,14.52L19.14,12.94M12,15.6A3.6,3.6 0 0,1 8.4,12A3.6,3.6 0 0,1 12,8.4A3.6,3.6 0 0,1 15.6,12A3.6,3.6 0 0,1 12,15.6Z" />
                             <TextBlock Text="Settings" />
                         </StackPanel>
                     </Button>

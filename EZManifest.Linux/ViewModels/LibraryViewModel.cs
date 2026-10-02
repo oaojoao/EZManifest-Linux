@@ -19,7 +19,31 @@ public partial class LibraryViewModel : ObservableObject
     private readonly AppMessageBoxService _messageBoxService;
     private readonly FileExplorerPickerService _filePicker;
 
-    public ObservableCollection<GameEntry> FilteredApps { get; } = [];
+    /// <summary>Games currently shown in the grid: the filtered list, loaded in chunks.</summary>
+    public ObservableCollection<GameEntry> ShownGames { get; } = [];
+
+    /// <summary>Filtered games not yet loaded into <see cref="ShownGames"/>.</summary>
+    private List<GameEntry> _filteredGames = [];
+
+    /// <summary>Cards are added this many at a time as the user scrolls.</summary>
+    private const int ShownChunkSize = 40;
+
+    public int RemainingGames => Math.Max(0, _filteredGames.Count - ShownGames.Count);
+
+    /// <summary>True when the grid shows at least one game card.</summary>
+    public bool HasGames => ShownGames.Count > 0;
+
+    /// <summary>Full-size image URL shown in the in-page media overlay. Null = closed.</summary>
+    [ObservableProperty]
+    private string? _viewedMediaImageUrl;
+
+    /// <summary>True while the in-page media overlay is open.</summary>
+    public bool IsMediaViewerOpen => ViewedMediaImageUrl is not null;
+
+    partial void OnViewedMediaImageUrlChanged(string? value)
+    {
+        OnPropertyChanged(nameof(IsMediaViewerOpen));
+    }
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -91,12 +115,31 @@ public partial class LibraryViewModel : ObservableObject
     private void ApplyFilter()
     {
         string query = (SearchText ?? string.Empty).Trim();
-        var source = string.IsNullOrWhiteSpace(query)
+        _filteredGames = string.IsNullOrWhiteSpace(query)
             ? _allGames
             : _allGames.Where(g => g.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-        FilteredApps.Clear();
-        foreach (var game in source)
-            FilteredApps.Add(game);
+        ShownGames.Clear();
+        foreach (var game in _filteredGames.Take(ShownChunkSize))
+            ShownGames.Add(game);
+        OnPropertyChanged(nameof(RemainingGames));
+        OnPropertyChanged(nameof(HasGames));
+    }
+
+    /// <summary>
+    /// Loads the next chunk of filtered games. Called when the grid is scrolled
+    /// near its end: realizing every card (and decoding every cover bitmap) at
+    /// once makes large libraries slow and memory-hungry, since WrapPanel does
+    /// not virtualize.
+    /// </summary>
+    [RelayCommand]
+    private void LoadMoreGames()
+    {
+        if (ShownGames.Count >= _filteredGames.Count)
+            return;
+        foreach (var game in _filteredGames.Skip(ShownGames.Count).Take(ShownChunkSize))
+            ShownGames.Add(game);
+        OnPropertyChanged(nameof(RemainingGames));
+        OnPropertyChanged(nameof(HasGames));
     }
 
     [RelayCommand]
@@ -107,7 +150,7 @@ public partial class LibraryViewModel : ObservableObject
         var games = await _gameLibrary.LoadAsync();
         _allGames = games;
         ApplyFilter();
-        StatusText = $"{FilteredApps.Count} game(s)";
+        StatusText = $"{_filteredGames.Count} game(s)";
         foreach (var game in _allGames.Where(g => g.IsInstalled))
         {
             _ = ResolveInstallSizeAsync(game);
@@ -378,28 +421,11 @@ public partial class LibraryViewModel : ObservableObject
         }
     }
 
+    /// <summary>Closes the in-page media overlay.</summary>
     [RelayCommand]
-    private void OpenMedia(GameMediaItem item)
+    private void CloseMediaViewer()
     {
-        if (item is null)
-            return;
-        string? url = item.IsVideo ? item.VideoUrl : item.ImageUrl;
-        if (string.IsNullOrWhiteSpace(url))
-            return;
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = "xdg-open",
-                Arguments = url,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-        }
-        catch (Exception ex)
-        {
-            AppLog.Write($"[Library] Could not open media: {ex.Message}");
-        }
+        ViewedMediaImageUrl = null;
     }
 
     private async Task<string?> PickGameExecutableAsync(GameEntry game)
