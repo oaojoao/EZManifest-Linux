@@ -30,10 +30,8 @@ public partial class DepotBoxPage : UserControl
 
         _webView = new WebView();
         _webView.Navigated += (url, _) => vm.OnNavigated(url);
-        _webView.DownloadCompleted += path => vm.OnDownloadCompleted(path);
-        _webView.DownloadCancelled += path => vm.OnDownloadCancelled(path);
-        _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(path, received, total);
         _webView.UnhandledAsyncException += e => EZManifest.Services.AppLog.Write(e.Exception, "[DepotBox] WebView error");
+        InstallDownloadHandler(vm);
 
         var host = this.Find<Panel>("BrowserHost");
         host?.Children.Add(_webView);
@@ -43,6 +41,40 @@ public partial class DepotBoxPage : UserControl
     }
 
     private WebView? WebViewControl => _webView;
+
+    /// <summary>
+    /// WebViewControl's built-in download handler opens a native GTK file dialog
+    /// (showDialog: true) which crashes inside the AppImage (no GTK bundled).
+    /// Replace it with an automatic, dialog-less download handler.
+    /// </summary>
+    private void InstallDownloadHandler(DepotBoxViewModel vm)
+    {
+        try
+        {
+            var browserProperty = typeof(WebView).GetProperty(
+                "UnderlyingBrowser",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var chromium = browserProperty?.GetValue(_webView);
+            var handlerProperty = chromium?.GetType().GetProperty("DownloadHandler");
+            if (chromium is null || handlerProperty is null)
+            {
+                EZManifest.Services.AppLog.Write("[DepotBox] Download handler replacement unavailable, falling back to built-in");
+                _webView.DownloadCompleted += path => vm.OnDownloadCompleted(path);
+                _webView.DownloadCancelled += path => vm.OnDownloadCancelled(path);
+                _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(path, received, total);
+                return;
+            }
+            handlerProperty.SetValue(chromium, new Services.DepotBoxDownloadHandler(
+                vm.OnDownloadStarted,
+                vm.OnDownloadProgress,
+                vm.OnDownloadCompleted,
+                vm.OnDownloadCancelled));
+        }
+        catch (Exception ex)
+        {
+            EZManifest.Services.AppLog.Write(ex, "[DepotBox] Could not install custom download handler");
+        }
+    }
 
     private void OnGoBack(object sender, RoutedEventArgs e)
     {
