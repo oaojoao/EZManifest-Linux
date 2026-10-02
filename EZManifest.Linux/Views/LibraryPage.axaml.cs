@@ -18,7 +18,7 @@ public partial class LibraryPage : UserControl
         if (sender is Border { DataContext: Models.GameEntry game } border
             && DataContext is LibraryViewModel vm)
         {
-            _ = vm.SelectGameCommand.ExecuteAsync(game);
+            vm.SelectGameCommand.Execute(game);
             e.Handled = true;
         }
     }
