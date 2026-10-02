@@ -69,7 +69,7 @@
                            IsVisible="{Binding HasCoverArt}" />
                   </Grid>
                 </Border>
-                <StackPanel Spacing="6" Padding="10,8,10,10">
+                <StackPanel Spacing="6" Margin="10,8,10,10">
                   <TextBlock HorizontalAlignment="Center" FontSize="12" Opacity="0.7"
                              Text="{Binding InstallSizeText}"
                              IsVisible="{Binding InstallSizeVisibility}" />
