@@ -32,6 +32,9 @@ public partial class DepotBoxPage : UserControl
         // The internal chromium control mirrors this property; without it the
         // off-screen browser never receives focus and text fields ignore clicks.
         _webView.Focusable = true;
+        // Avalonia does not focus controls on click (unlike WPF): request focus
+        // explicitly so the browser can hand it to the HTML text fields.
+        _webView.PointerPressed += (_, _) => _webView.Focus();
         _webView.Navigated += (url, _) => vm.OnNavigated(url);
         _webView.UnhandledAsyncException += e => EZManifest.Services.AppLog.Write(e.Exception, "[DepotBox] WebView error");
         InstallDownloadHandler(vm);
