@@ -119,7 +119,6 @@ public partial class DepotBoxViewModel : ObservableObject
                 return;
             item.ReceivedBytes = received;
             item.TotalBytes = total;
-            item.OnPropertyChanged(nameof(BrowserDownloadItem.Percentage));
         });
     }
 
