@@ -25,7 +25,7 @@ public partial class DepotBoxPage : UserControl
         WebView.Settings.PersistCache = true;
 
         _webView = new WebView();
-        _webView.Navigated += url => vm.OnNavigated(url);
+        _webView.Navigated += (url, _) => vm.OnNavigated(url);
         _webView.DownloadCompleted += path => vm.OnDownloadCompleted(path);
         _webView.DownloadCancelled += path => vm.OnDownloadCancelled(path);
         _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(path, received, total);
