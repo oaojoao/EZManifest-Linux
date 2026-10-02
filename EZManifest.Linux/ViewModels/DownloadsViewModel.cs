@@ -357,7 +357,7 @@ public partial class DownloadsViewModel : ObservableObject
         if (selectedItems.Count == 0)
             return;
 
-        await StartDownloadProcessAsync(selectedItems, removeSteamDrm, addToSteam);
+        await StartDownloadProcessAsync(selectedItems.Select(item => item.Depot).ToList(), removeSteamDrm, addToSteam);
         RefreshService.RequestRefresh();
     }
 

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using EZManifest.Linux.ViewModels;
 using EZManifest.Services;
 using Microsoft.Extensions.DependencyInjection;
