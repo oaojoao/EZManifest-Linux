@@ -6,11 +6,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUBLISH="$ROOT/publish/linux-x64"
 APPDIR="$ROOT/publish/AppDir"
-OUTPUT="$ROOT/publish"
+TOOLS="$ROOT/publish/tools"
 VERSION="${1:-1.2.2}"
 
 rm -rf "$APPDIR"
-mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+mkdir -p "$APPDIR/usr/bin" \
+         "$APPDIR/usr/share/applications" \
+         "$APPDIR/usr/share/icons/hicolor/256x256/apps" \
+         "$TOOLS"
 
 cp "$PUBLISH/EZManifest" "$APPDIR/usr/bin/EZManifest"
 chmod +x "$APPDIR/usr/bin/EZManifest"
@@ -18,24 +21,24 @@ chmod +x "$APPDIR/usr/bin/EZManifest"
 cp "$ROOT/Packaging/EZManifest.desktop" "$APPDIR/usr/share/applications/EZManifest.desktop"
 cp "$ROOT/Assets/EZManifestLogo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png"
 
-# linuxdeploy AppRun (self-contained executable from CI download)
-LINUXDEPLOY="${LINUXDEPLOY:-$OUTPUT/linuxdeploy-x86_64.AppImage}"
+LINUXDEPLOY="${LINUXDEPLOY:-$TOOLS/linuxdeploy-x86_64.AppImage}"
 if [ ! -x "$LINUXDEPLOY" ]; then
   echo "linuxdeploy not found at $LINUXDEPLOY" >&2
   exit 1
 fi
 
-ARCH=x86_64 "$LINUXDEPLOY" \
-  --appdir "$APPDIR" \
-  --desktop-file "$APPDIR/usr/share/applications/EZManifest.desktop" \
-  --icon-file "$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
-  --output appimage || true
+export OUTPUT="$PUBLISH"
+export ARCH=x86_64
+export VERSION
 
-# appimagetool fallback / rename
-mkdir -p "$OUTPUT"
-if compgen -G "$OUTPUT/EZManifest-*.AppImage" > /dev/null; then
-  mv "$OUTPUT"/EZManifest-*.AppImage "$OUTPUT/EZManifest-$VERSION-x86_64.AppImage" 2>/dev/null || true
-fi
+"$LINUXDEPLOY" \
+  --appdir="$APPDIR" \
+  --executable="$APPDIR/usr/bin/EZManifest" \
+  --desktop-file="$APPDIR/usr/share/applications/EZManifest.desktop" \
+  --icon-file="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
+  --output=appimage
 
-echo "AppImage packaging attempted in $OUTPUT"
-ls -la "$OUTPUT"
+mv "$PUBLISH/EZManifest-x86_64.AppImage" "$PUBLISH/EZManifest-$VERSION-x86_64.AppImage"
+
+echo "AppImage built:"
+ls -la "$PUBLISH"/*.AppImage
