@@ -33,6 +33,8 @@ exec "$DIR/../share/EZManifest/EZManifest" "$@"
 WRAPPER
 chmod +x "$APPDIR/usr/bin/EZManifest"
 
+
+
 cp "$ROOT/Packaging/EZManifest.desktop" "$APPDIR/usr/share/applications/EZManifest.desktop"
 
 # linuxdeploy requires standard icon resolutions; the repo ships a 256x256 variant.
@@ -48,6 +50,16 @@ export OUTPUT="$OUTDIR/EZManifest-$VERSION-x86_64.AppImage"
 export ARCH=x86_64
 export VERSION
 
+# Custom AppRun: linuxdeploy copies this to the AppDir root, so paths must
+# resolve from there (usr/share/EZManifest), not from usr/bin like the wrapper.
+cat > "$APPDIR/AppRun.custom" <<'APPRUN'
+#!/usr/bin/env bash
+HERE="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+export DOTNET_BUNDLE_EXTRACT_BASE_DIR="${TMPDIR:-/tmp}/ezmanifest-bundle"
+exec "$HERE/usr/share/EZManifest/EZManifest" "$@"
+APPRUN
+chmod +x "$APPDIR/AppRun.custom"
+
 # Deploy shared-library dependencies of the bundled binaries without letting
 # linuxdeploy move or parse the wrapper. The app is self-contained .NET + CEF,
 # so this only picks up a handful of system libraries.
@@ -56,6 +68,7 @@ export VERSION
   --desktop-file="$APPDIR/usr/share/applications/EZManifest.desktop" \
   --icon-file="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
   --deploy-deps-only="$APPFOLDER" \
+  --custom-apprun="$APPDIR/AppRun.custom" \
   --output=appimage
 
 echo "AppImage built:"
