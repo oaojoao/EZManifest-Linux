@@ -34,9 +34,10 @@ jobs:
 
       - name: Download linuxdeploy
         run: |
-          curl -sL -o EZManifest.Linux/publish/linuxdeploy-x86_64.AppImage \
+          mkdir -p EZManifest.Linux/publish/tools
+          curl -sL -o EZManifest.Linux/publish/tools/linuxdeploy-x86_64.AppImage \
             https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          chmod +x EZManifest.Linux/publish/linuxdeploy-x86_64.AppImage
+          chmod +x EZManifest.Linux/publish/tools/linuxdeploy-x86_64.AppImage
 
       - name: Package AppImage
         run: |
@@ -47,5 +48,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EZManifest-Linux-AppImage
-          path: EZManifest.Linux/publish/*.AppImage
+          path: EZManifest.Linux/publish/EZManifest-*.AppImage
           if-no-files-found: error
