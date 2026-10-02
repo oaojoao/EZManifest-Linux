@@ -64,30 +64,43 @@ public sealed class GameLauncher
             game.LaunchOptions ?? string.Empty,
             compatDataPath);
 
-        // Detach the game into its own session (setsid) and point std streams at
-        // a log file: the game must not share pipes with this app, otherwise a
-        // closed pipe or a parent signal kills it mid-game.
         string logPath = Path.Combine(AppPaths.DataDirectory, "game-launch.log");
-        string command = $"exec setsid {Quote(psi.FileName)} run {Quote(exePath)}" +
+        string command = $"setsid {Quote(psi.FileName)} run {Quote(exePath)}" +
             (string.IsNullOrWhiteSpace(game.LaunchOptions) ? string.Empty : $" {game.LaunchOptions}") +
             $" >> {Quote(logPath)} 2>&1";
 
+        StartDetached(command, psi.WorkingDirectory, psi.Environment);
+        AppLog.Write($"[Play] Launched '{game.Name}' via {proton.Name} (detached session)");
+    }
+
+    /// <summary>
+    /// Starts the command through <c>/bin/sh</c> in the background: the shell forks,
+    /// exits immediately, and the game (in its own session via <c>setsid</c>) is
+    /// reparented to init. The game is never a child of this app: closing the app
+    /// or a signal sent to the app's process group cannot touch it.
+    /// </summary>
+    private static void StartDetached(
+        string command,
+        string workingDirectory,
+        IDictionary<string, string?>? environment = null)
+    {
         var detached = new ProcessStartInfo
         {
             FileName = "/bin/sh",
-            WorkingDirectory = psi.WorkingDirectory,
+            WorkingDirectory = workingDirectory,
             UseShellExecute = false,
             CreateNoWindow = true
         };
         // ArgumentList passes each argument verbatim; Arguments would be
         // re-tokenized by .NET on spaces, splitting the shell command apart.
         detached.ArgumentList.Add("-c");
-        detached.ArgumentList.Add(command);
-        foreach (var pair in psi.Environment)
-            detached.Environment[pair.Key] = pair.Value;
-
+        detached.ArgumentList.Add(command + " &");
+        if (environment is not null)
+        {
+            foreach (var pair in environment)
+                detached.Environment[pair.Key] = pair.Value;
+        }
         Process.Start(detached);
-        AppLog.Write($"[Play] Launched '{game.Name}' via {proton.Name} (detached session)");
     }
 
     /// <summary>
@@ -133,14 +146,33 @@ public sealed class GameLauncher
 
     private static void LaunchDirect(string fileName, string workingDirectory, string? arguments)
     {
-        var psi = new ProcessStartInfo
+        string logPath = Path.Combine(AppPaths.DataDirectory, "game-launch.log");
+        string command = $"setsid {BuildDirectInvocation(fileName)}" +
+            (string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}") +
+            $" >> {Quote(logPath)} 2>&1";
+
+        StartDetached(command, workingDirectory);
+        AppLog.Write($"[Play] Launched directly (detached session): {fileName}");
+    }
+
+    /// <summary>
+    /// Runs the file directly when it carries the execute bit; otherwise falls
+    /// back to <c>sh</c>, since downloaded launch scripts (run.sh, start.sh...)
+    /// are not always executable.
+    /// </summary>
+    private static string BuildDirectInvocation(string fileName)
+    {
+        try
         {
-            FileName = fileName,
-            WorkingDirectory = workingDirectory,
-            Arguments = arguments ?? string.Empty,
-            UseShellExecute = true
-        };
-        Process.Start(psi);
-        AppLog.Write($"[Play] Launched directly: {fileName}");
+            UnixFileMode mode = File.GetUnixFileMode(fileName);
+            bool executable = (mode & (UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute)) != 0;
+            if (executable)
+                return Quote(fileName);
+            return $"sh {Quote(fileName)}";
+        }
+        catch (Exception)
+        {
+            return Quote(fileName);
+        }
     }
 }
