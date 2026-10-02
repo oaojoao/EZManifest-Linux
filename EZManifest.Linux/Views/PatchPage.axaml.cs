@@ -36,6 +36,7 @@ public partial class PatchPage : UserControl
         _webView.PointerPressed += (_, _) => _webView.Focus();
         _webView.UnhandledAsyncException += e => AppLog.Write(e.Exception, "[Patch] WebView error");
         InstallDownloadHandler(vm);
+        SameTabPopupInstaller.Install(_webView);
 
         var host = this.Find<Panel>("GcwBrowserHost");
         host?.Children.Add(_webView);

@@ -38,6 +38,7 @@ public partial class DepotBoxPage : UserControl
         _webView.Navigated += (url, _) => vm.OnNavigated(url);
         _webView.UnhandledAsyncException += e => EZManifest.Services.AppLog.Write(e.Exception, "[DepotBox] WebView error");
         InstallDownloadHandler(vm);
+        Services.SameTabPopupInstaller.Install(_webView);
 
         var host = this.Find<Panel>("BrowserHost");
         host?.Children.Add(_webView);
