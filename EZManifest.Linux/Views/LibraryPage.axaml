@@ -38,20 +38,6 @@
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="0" />
     </Style>
-    <Style Selector="Button.card">
-      <Setter Property="Background" Value="#1e1e24" />
-      <Setter Property="BorderBrush" Value="#3a3a40" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-      <Setter Property="VerticalContentAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Button.card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#26262e" />
-      <Setter Property="BorderBrush" Value="#4a4a52" />
-      <Setter Property="CornerRadius" Value="10" />
-    </Style>
     <Style Selector="Button.mediabtn">
       <Setter Property="Padding" Value="0" />
       <Setter Property="CornerRadius" Value="4" />
@@ -75,9 +61,8 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="models:GameEntry">
-            <Button Classes="card" Margin="0,0,10,10" Width="200" Background="Transparent" BorderThickness="0"
-                    Command="{Binding $parent[ItemsControl].DataContext.SelectGameCommand}"
-                    CommandParameter="{Binding}">
+            <Border Classes="card" Margin="0,0,10,10" Width="200"
+                    PointerReleased="OnCardPointerReleased" Tag="{Binding}">
               <StackPanel>
                 <Border Height="230" CornerRadius="8,8,0,0" ClipToBounds="True">
                   <Grid>
@@ -103,7 +88,7 @@
                           CommandParameter="{Binding}" />
                 </StackPanel>
               </StackPanel>
-            </Button>
+            </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
@@ -112,7 +97,7 @@
     <Border Grid.Row="2" Classes="detail" Margin="0,12,0,0" Padding="20,14,20,16"
             IsVisible="{Binding HasSelectedGame}">
       <StackPanel Spacing="12">
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" x:DataType="models:GameEntry"
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" x:DataType="models:GameEntry"
               DataContext="{Binding SelectedGame}">
           <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
             <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" />
@@ -144,6 +129,11 @@
                   Command="{Binding $parent[UserControl].DataContext.UninstallCommand}"
                   CommandParameter="{Binding}">
             <TextBlock Text="🗑" FontSize="15" />
+          </Button>
+          <Button Grid.Column="4" Classes="iconbtn" Width="40" Height="40" Margin="8,0,0,0"
+                  ToolTip.Tip="Close details"
+                  Command="{Binding $parent[UserControl].DataContext.CloseDetailCommand}">
+            <TextBlock Text="✕" FontSize="15" />
           </Button>
         </Grid>
 
