@@ -2,18 +2,55 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="EZManifest.Linux.MainWindow"
         Title="EZManifest"
-        Width="1200" Height="780"
+        Width="1280" Height="820"
+        MinWidth="960" MinHeight="640"
+        Background="#141418"
         WindowStartupLocation="CenterScreen">
 
     <Grid ColumnDefinitions="220,*">
-        <Border Grid.Column="0" Classes="sidebar" Background="#1b1b1f">
-            <StackPanel Spacing="6" Margin="12,16,12,0">
-                <TextBlock Text="EZManifest" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
-                <Button x:Name="NavLibrary"    Content="Library"    Classes="nav" Click="OnNavigateLibrary" />
-                <Button x:Name="NavDownloads" Content="Downloads" Classes="nav" Click="OnNavigateDownloads" />
-            <Button x:Name="NavPatch"      Content="Patch"      Classes="nav" Click="OnNavigatePatch" />
-                <Button x:Name="NavSettings"   Content="Settings"   Classes="nav" Click="OnNavigateSettings" />
-            </StackPanel>
+        <Border Grid.Column="0" Background="#1b1b20">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="16,20,16,0" Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Image Source="/Assets/EZManifestLogo.png" Width="28" Height="28" />
+                        <TextBlock Text="EZManifest" FontSize="18" FontWeight="Bold"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="Steam manifest downloader" FontSize="11" Opacity="0.5" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="12,24,12,0">
+                    <Button x:Name="NavLibrary"    Classes="nav" Click="OnNavigateLibrary">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🎮" FontSize="15" />
+                            <TextBlock Text="Library" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavDownloads" Classes="nav" Click="OnNavigateDownloads">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⬇️" FontSize="15" />
+                            <TextBlock Text="Downloads" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavPatch" Classes="nav" Click="OnNavigatePatch">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🩹" FontSize="15" />
+                            <TextBlock Text="Patch" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavSettings" Classes="nav" Click="OnNavigateSettings">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⚙️" FontSize="15" />
+                            <TextBlock Text="Settings" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <Border DockPanel.Dock="Bottom" Margin="16,0,16,16">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="v1.2.2 · Linux" FontSize="11" Opacity="0.4" />
+                    </StackPanel>
+                </Border>
+                <Panel />
+            </DockPanel>
         </Border>
         <ContentControl Grid.Column="1" x:Name="PageHost" />
     </Grid>
@@ -24,10 +61,14 @@
             <Setter Property="Padding" Value="12,10" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="#d8d8dc" />
+        </Style>
+        <Style Selector="Button.nav:pointerover">
+            <Setter Property="Background" Value="#26262e" />
         </Style>
         <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2a2a30" />
+            <Setter Property="TextElement.Foreground" Value="White" />
         </Style>
     </Window.Styles>
-
 </Window>

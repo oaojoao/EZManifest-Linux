@@ -79,6 +79,8 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshAsync()
     {
+        try
+        {
         var games = await _gameLibrary.LoadAsync();
         _allGames = games;
         ApplyFilter();
@@ -86,6 +88,12 @@ public partial class LibraryViewModel : ObservableObject
         foreach (var game in _allGames.Where(g => g.IsInstalled))
         {
             _ = ResolveInstallSizeAsync(game);
+        }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "[Library] Refresh failed");
+            StatusText = "Could not load the library.";
         }
     }
 
@@ -106,6 +114,8 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private void SelectGame(GameEntry game)
     {
+        if (game is null)
+            return;
         SelectedGame = game;
         SelectedGameStatus = game.IsInstalled ? "Installed" : game.IsInstalling ? "Installing" : "Not installed";
         _ = LoadDetailAsync(game);
@@ -178,6 +188,8 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private async Task PlayAsync(GameEntry game)
     {
+        if (game is null)
+            return;
         try
         {
             string startLocation = game.StartLocation;
@@ -222,17 +234,21 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private async Task UninstallAsync(GameEntry game)
     {
-        var result = await _messageBoxService.ShowAsync(
-            "Uninstall game",
-            $"Remove {game.Name} and delete its install folder?",
-            "Uninstall",
-            "Cancel");
-        if (result != ContentDialogResult.Primary)
+        if (game is null)
             return;
         try
         {
+            var result = await _messageBoxService.ShowAsync(
+                "Uninstall game",
+                $"Remove {game.Name} and delete its install folder?",
+                "Uninstall",
+                "Cancel");
+            if (result != ContentDialogResult.Primary)
+                return;
+            SelectedGame = null;
             await _uninstallService.UninstallAsync(game);
             await RefreshAsync();
+            StatusText = $"{game.Name} was uninstalled";
         }
         catch (Exception ex)
         {
@@ -244,7 +260,7 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private void OpenFolder(GameEntry game)
     {
-        if (string.IsNullOrWhiteSpace(game.InstallPath) || !Directory.Exists(game.InstallPath))
+        if (game is null || string.IsNullOrWhiteSpace(game.InstallPath) || !Directory.Exists(game.InstallPath))
             return;
         try
         {
@@ -263,7 +279,7 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private void OpenStorePage(GameEntry game)
     {
-        if (string.IsNullOrWhiteSpace(game.AppId))
+        if (game is null || string.IsNullOrWhiteSpace(game.AppId))
             return;
         try
         {
@@ -284,6 +300,8 @@ public partial class LibraryViewModel : ObservableObject
     [RelayCommand]
     private void OpenMedia(GameMediaItem item)
     {
+        if (item is null)
+            return;
         string? url = item.IsVideo ? item.VideoUrl : item.ImageUrl;
         if (string.IsNullOrWhiteSpace(url))
             return;

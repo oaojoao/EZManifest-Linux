@@ -1,30 +1,77 @@
 <UserControl xmlns="https://github.com/avaloniaui"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             x:Class="EZManifest.Linux.Views.SettingsPage">
-    <ScrollViewer Padding="24">
-        <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left">
-            <TextBlock Text="Settings" FontSize="24" FontWeight="Bold" />
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#1e1e24" />
+      <Setter Property="BorderBrush" Value="#32323a" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="20" />
+    </Style>
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="24" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Opacity" Value="0.55" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="Button.accent">
+      <Setter Property="Background" Value="#0F9D58" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#18C46A" />
+    </Style>
+  </UserControl.Styles>
 
-            <TextBlock Text="Install path" FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBox Text="{Binding DownloadPath, Mode=TwoWay}" Width="420" Watermark="Choose where games are installed…" />
-                <Button Content="Browse" Command="{Binding BrowseDownloadPathCommand}" />
-                <Button Content="Apply" Command="{Binding ApplyDownloadPathCommand}" Classes="accent" />
-            </StackPanel>
+  <ScrollViewer Padding="24,20,24,24">
+    <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
+      <TextBlock Classes="h1" Text="Settings" Margin="0,0,0,8" />
 
-            <TextBlock Text="Proton" FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Play with Proton" VerticalAlignment="Center" />
-                <ToggleSwitch IsChecked="{Binding UseProton, Mode=TwoWay}" />
-                <ComboBox ItemsSource="{Binding ProtonVersions}" SelectedItem="{Binding ProtonVersion, Mode=TwoWay}" MinWidth="200" />
-            </StackPanel>
-
-            <TextBlock Text="Download concurrency" FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <NumericUpDown Value="{Binding MaxConcurrentChunks, Mode=TwoWay}" Minimum="1" Maximum="64" Width="120" />
-            </StackPanel>
-
-            <TextBlock Text="{Binding StatusText}" Foreground="Gray" />
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="Install path" />
+          <TextBlock Classes="muted" Text="Where downloaded games are stored on disk." />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox Text="{Binding DownloadPath, Mode=TwoWay}" Width="420"
+                      Watermark="Choose where games are installed..." />
+            <Button Content="Browse" Command="{Binding BrowseDownloadPathCommand}" />
+            <Button Content="Apply" Command="{Binding ApplyDownloadPathCommand}" Classes="accent" />
+          </StackPanel>
         </StackPanel>
-    </ScrollViewer>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="Proton" />
+          <TextBlock Classes="muted" Text="Windows executables launch through the selected Proton build (official or GE). 'Auto' picks the newest installed version." />
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <ToggleSwitch IsChecked="{Binding UseProton, Mode=TwoWay}" />
+            <TextBlock Text="Play with Proton" VerticalAlignment="Center" />
+            <ComboBox ItemsSource="{Binding ProtonVersions}" SelectedItem="{Binding ProtonVersion, Mode=TwoWay}"
+                      MinWidth="220" VerticalAlignment="Center" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="Download concurrency" />
+          <TextBlock Classes="muted" Text="Maximum parallel chunk downloads from the Steam CDN." />
+          <NumericUpDown Value="{Binding MaxConcurrentChunks, Mode=TwoWay}" Minimum="1" Maximum="64" Width="120" />
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="{Binding StatusText}" Foreground="#18C46A" IsVisible="{Binding StatusText}" />
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

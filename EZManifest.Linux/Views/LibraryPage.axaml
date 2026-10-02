@@ -10,16 +10,16 @@
   </UserControl.Resources>
   <UserControl.Styles>
     <Style Selector="Border.card">
-      <Setter Property="Background" Value="#25252b" />
+      <Setter Property="Background" Value="#1e1e24" />
       <Setter Property="BorderBrush" Value="#3a3a40" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="CornerRadius" Value="10" />
     </Style>
     <Style Selector="Border.detail">
       <Setter Property="Background" Value="#1e1e24" />
       <Setter Property="BorderBrush" Value="#3a3a40" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="CornerRadius" Value="10" />
     </Style>
     <Style Selector="Button.play">
       <Setter Property="Background" Value="#0F9D58" />
@@ -29,6 +29,9 @@
     </Style>
     <Style Selector="Button.play:pointerover /template/ ContentPresenter">
       <Setter Property="Background" Value="#18C46A" />
+    </Style>
+    <Style Selector="Border.card:pointerover">
+      <Setter Property="Background" Value="#26262e" />
     </Style>
     <Style Selector="Button.iconbtn">
       <Setter Property="Background" Value="#2a2a30" />

@@ -166,10 +166,17 @@ public partial class DownloadsViewModel : ObservableObject
     [RelayCommand]
     private async Task BrowseArchiveAsync()
     {
+        try
+        {
         var paths = await _filePicker.PickFilesAsync([".zip"], "Select manifest archive");
         if (paths.Count == 0)
             return;
         await ImportManifestAsync(paths[0]);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "[Downloads] Browse failed");
+        }
     }
 
     public async Task ImportManifestAsync(string path)
