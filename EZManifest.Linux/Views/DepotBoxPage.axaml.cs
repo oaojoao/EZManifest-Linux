@@ -17,12 +17,13 @@ public partial class DepotBoxPage : UserControl
         var vm = App.Services.GetRequiredService<DepotBoxViewModel>();
         DataContext = vm;
 
-        // The CEF sandbox does not work inside an AppImage / without a chrome-sandbox
-        // binary owned by root, so it must be disabled like most Electron apps do.
-        WebView.Settings.OsrEnabled = false;
+        // Off-screen rendering: no native child X11 window and software
+        // rendering, which is the stable mode for CEF inside an AppImage.
+        WebView.Settings.OsrEnabled = true;
         WebView.Settings.AddCommandLineSwitch("no-sandbox", null);
         WebView.Settings.AddCommandLineSwitch("disable-setuid-sandbox", null);
         WebView.Settings.AddCommandLineSwitch("disable-gpu", null);
+        WebView.Settings.AddCommandLineSwitch("disable-gpu-compositing", null);
         WebView.Settings.CachePath = System.IO.Path.Combine(
             EZManifest.Services.AppPaths.DataDirectory, "WebViewCache");
         WebView.Settings.PersistCache = true;
