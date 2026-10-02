@@ -190,12 +190,13 @@ public partial class PatchViewModel : ObservableObject
         }
     }
 
-    public void OnDownloadStarted(string fullPath)
+    public void OnDownloadStarted(long id, string fullPath)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             var item = new BrowserDownloadItem
             {
+                DownloadId = id,
                 FileName = Path.GetFileName(fullPath),
                 FullPath = fullPath
             };
@@ -204,32 +205,28 @@ public partial class PatchViewModel : ObservableObject
         });
     }
 
-    public void OnDownloadProgress(string fullPath, long received, long total)
+    public void OnDownloadProgress(long id, string fullPath, long received, long total)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            var item = BrowserDownloads.FirstOrDefault(d => d.DownloadId == id);
             if (item is null)
-            {
-                item = new BrowserDownloadItem
-                {
-                    FileName = Path.GetFileName(fullPath),
-                    FullPath = fullPath
-                };
-                BrowserDownloads.Insert(0, item);
-            }
+                return; // progress for a download we never announced: ignore
             item.ReceivedBytes = received;
             item.TotalBytes = total;
+            item.Status = total > 0
+                ? $"Downloading... {Math.Round(received * 100.0 / total)}%"
+                : "Downloading...";
         });
     }
 
-    public async void OnDownloadCompleted(string fullPath)
+    public async void OnDownloadCompleted(long id, string fullPath)
     {
         try
         {
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+                var item = BrowserDownloads.FirstOrDefault(d => d.DownloadId == id);
                 if (item is not null)
                     item.IsComplete = true;
 
@@ -241,7 +238,11 @@ public partial class PatchViewModel : ObservableObject
                         item.Status = "Extracting...";
                     _patchArchivePath = fullPath;
                     if (await ExtractPatchAsync())
+                    {
+                        if (item is not null)
+                            item.Status = "Choose game...";
                         await SelectTargetAndApplyAsync();
+                    }
                 }
                 else
                 {
@@ -258,11 +259,11 @@ public partial class PatchViewModel : ObservableObject
         }
     }
 
-    public void OnDownloadCancelled(string fullPath)
+    public void OnDownloadCancelled(long id, string fullPath)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            var item = BrowserDownloads.FirstOrDefault(d => d.DownloadId == id);
             if (item is not null)
                 item.Status = "Cancelled";
             StatusText = "Download cancelled";

@@ -19,15 +19,9 @@ public partial class PatchPage : UserControl
         var vm = App.Services.GetRequiredService<PatchViewModel>();
         DataContext = vm;
 
-        // Same off-screen/software CEF configuration as DepotBox (the settings are
-        // global; repeated in case this page is opened first).
-        WebView.Settings.OsrEnabled = true;
-        WebView.Settings.AddCommandLineSwitch("no-sandbox", null);
-        WebView.Settings.AddCommandLineSwitch("disable-setuid-sandbox", null);
-        WebView.Settings.AddCommandLineSwitch("disable-gpu", null);
-        WebView.Settings.AddCommandLineSwitch("disable-gpu-compositing", null);
-        WebView.Settings.CachePath = System.IO.Path.Combine(AppPaths.DataDirectory, "WebViewCache");
-        WebView.Settings.PersistCache = true;
+        // Global CEF settings (OSR/software rendering, cache) are applied once by
+        // the first embedded browser; re-setting them crashes once loaded.
+        Services.WebViewSetup.Configure();
 
         _webView = new WebView
         {
@@ -62,9 +56,9 @@ public partial class PatchPage : UserControl
             if (chromium is null || handlerProperty is null)
             {
                 AppLog.Write("[Patch] Download handler replacement unavailable, falling back to built-in");
-                _webView.DownloadCompleted += path => vm.OnDownloadCompleted(path);
-                _webView.DownloadCancelled += path => vm.OnDownloadCancelled(path);
-                _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(path, received, total);
+                _webView.DownloadCompleted += path => vm.OnDownloadCompleted(0, path);
+                _webView.DownloadCancelled += path => vm.OnDownloadCancelled(0, path);
+                _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(0, path, received, total);
                 return;
             }
             handlerProperty.SetValue(chromium, new DepotBoxDownloadHandler(

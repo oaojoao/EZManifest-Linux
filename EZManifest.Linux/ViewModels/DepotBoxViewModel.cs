@@ -9,6 +9,9 @@ namespace EZManifest.Linux.ViewModels;
 
 public partial class BrowserDownloadItem : ObservableObject
 {
+    /// <summary>CEF download id: the only stable key while FullPath may be empty.</summary>
+    public long DownloadId { get; init; }
+
     public string FileName { get; init; } = string.Empty;
     public string FullPath { get; init; } = string.Empty;
 
@@ -96,52 +99,52 @@ public partial class DepotBoxViewModel : ObservableObject
         StatusText = string.Empty;
     }
 
-    public void OnDownloadStarted(string fullPath)
+    public void OnDownloadStarted(long id, string fullPath)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             var item = new BrowserDownloadItem
             {
+                DownloadId = id,
                 FileName = Path.GetFileName(fullPath),
                 FullPath = fullPath
             };
             BrowserDownloads.Insert(0, item);
             StatusText = $"Downloading {item.FileName}...";
+            // Mirror the Windows behaviour: a finished archive import takes
+            // over the UI, so jump to the Downloads page while it runs.
+            MainWindow.NavigateRequested?.Invoke("Downloads");
         });
     }
 
-    public void OnDownloadProgress(string fullPath, long received, long total)
+    public void OnDownloadProgress(long id, string fullPath, long received, long total)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            var item = BrowserDownloads.FirstOrDefault(d => d.DownloadId == id);
             if (item is null)
             {
-                // WebViewControl has no "download started" event: the first
-                // progress notification is the signal that a download began.
+                // No start event was seen (fallback wiring): create it now.
                 item = new BrowserDownloadItem
                 {
+                    DownloadId = id,
                     FileName = Path.GetFileName(fullPath),
                     FullPath = fullPath
                 };
                 BrowserDownloads.Insert(0, item);
-                StatusText = $"Downloading {item.FileName}...";
-                // Mirror the Windows behaviour: a finished archive import takes
-                // over the UI, so jump to the Downloads page while it runs.
-                MainWindow.NavigateRequested?.Invoke("Downloads");
             }
             item.ReceivedBytes = received;
             item.TotalBytes = total;
         });
     }
 
-    public async void OnDownloadCompleted(string fullPath)
+    public async void OnDownloadCompleted(long id, string fullPath)
     {
         try
         {
         await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            var item = BrowserDownloads.FirstOrDefault(d => d.DownloadId == id);
             if (item is not null)
             {
                 item.IsComplete = true;
@@ -171,11 +174,11 @@ public partial class DepotBoxViewModel : ObservableObject
         }
     }
 
-    public void OnDownloadCancelled(string fullPath)
+    public void OnDownloadCancelled(long id, string fullPath)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            var item = BrowserDownloads.FirstOrDefault(d => d.FullPath == fullPath);
+            var item = BrowserDownloads.FirstOrDefault(d => d.DownloadId == id);
             if (item is not null)
                 item.Status = "Cancelled";
             StatusText = "Download cancelled";

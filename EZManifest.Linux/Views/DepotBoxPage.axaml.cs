@@ -17,16 +17,9 @@ public partial class DepotBoxPage : UserControl
         var vm = App.Services.GetRequiredService<DepotBoxViewModel>();
         DataContext = vm;
 
-        // Off-screen rendering: no native child X11 window and software
-        // rendering, which is the stable mode for CEF inside an AppImage.
-        WebView.Settings.OsrEnabled = true;
-        WebView.Settings.AddCommandLineSwitch("no-sandbox", null);
-        WebView.Settings.AddCommandLineSwitch("disable-setuid-sandbox", null);
-        WebView.Settings.AddCommandLineSwitch("disable-gpu", null);
-        WebView.Settings.AddCommandLineSwitch("disable-gpu-compositing", null);
-        WebView.Settings.CachePath = System.IO.Path.Combine(
-            EZManifest.Services.AppPaths.DataDirectory, "WebViewCache");
-        WebView.Settings.PersistCache = true;
+        // Global CEF settings (OSR/software rendering, cache) are applied once by
+        // the first embedded browser; re-setting them crashes once loaded.
+        Services.WebViewSetup.Configure();
 
         _webView = new WebView();
         // The internal chromium control mirrors this property; without it the
@@ -66,9 +59,9 @@ public partial class DepotBoxPage : UserControl
             if (chromium is null || handlerProperty is null)
             {
                 EZManifest.Services.AppLog.Write("[DepotBox] Download handler replacement unavailable, falling back to built-in");
-                _webView.DownloadCompleted += path => vm.OnDownloadCompleted(path);
-                _webView.DownloadCancelled += path => vm.OnDownloadCancelled(path);
-                _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(path, received, total);
+                _webView.DownloadCompleted += path => vm.OnDownloadCompleted(0, path);
+                _webView.DownloadCancelled += path => vm.OnDownloadCancelled(0, path);
+                _webView.DownloadProgressChanged += (path, received, total) => vm.OnDownloadProgress(0, path, received, total);
                 return;
             }
             handlerProperty.SetValue(chromium, new Services.DepotBoxDownloadHandler(
