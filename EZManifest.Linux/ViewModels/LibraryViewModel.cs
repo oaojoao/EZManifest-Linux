@@ -3,9 +3,9 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EZManifest.Linux.Services;
+using EZManifest.Linux.Views;
 using EZManifest.Models;
 using EZManifest.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace EZManifest.Linux.ViewModels;
 
@@ -14,11 +14,12 @@ public partial class LibraryViewModel : ObservableObject
     private readonly GameLibraryService _gameLibrary;
     private readonly GameLauncher _gameLauncher;
     private readonly GameUninstallService _uninstallService;
+    private readonly GameInstallSizeService _installSizeService;
+    private readonly SteamMetadataService _steamMetadata;
     private readonly AppMessageBoxService _messageBoxService;
     private readonly FileExplorerPickerService _filePicker;
-    private readonly IServiceProvider _services;
 
-    public ObservableCollection<GameEntry> Games { get; } = [];
+    public ObservableCollection<GameEntry> FilteredApps { get; } = [];
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -26,33 +27,152 @@ public partial class LibraryViewModel : ObservableObject
     [ObservableProperty]
     private string _statusText = string.Empty;
 
+    [ObservableProperty]
+    private GameEntry? _selectedGame;
+
+    [ObservableProperty]
+    private string _selectedGameStatus = string.Empty;
+
+    [ObservableProperty]
+    private string? _selectedGameHeroPath;
+
+    [ObservableProperty]
+    private string? _selectedGameLogoPath;
+
+    [ObservableProperty]
+    private ObservableCollection<GameMediaItem> _selectedGameMedia = [];
+
+    private List<GameEntry> _allGames = [];
+
     public LibraryViewModel(
         GameLibraryService gameLibrary,
         GameLauncher gameLauncher,
         GameUninstallService uninstallService,
+        GameInstallSizeService installSizeService,
+        SteamMetadataService steamMetadata,
         AppMessageBoxService messageBoxService,
-        FileExplorerPickerService filePicker,
-        IServiceProvider services)
+        FileExplorerPickerService filePicker)
     {
         _gameLibrary = gameLibrary;
         _gameLauncher = gameLauncher;
         _uninstallService = uninstallService;
+        _installSizeService = installSizeService;
+        _steamMetadata = steamMetadata;
         _messageBoxService = messageBoxService;
         _filePicker = filePicker;
-        _services = services;
         _ = RefreshAsync();
+    }
+
+    partial void OnSearchTextChanged(string value) => ApplyFilter();
+
+    private void ApplyFilter()
+    {
+        string query = (SearchText ?? string.Empty).Trim();
+        var source = string.IsNullOrWhiteSpace(query)
+            ? _allGames
+            : _allGames.Where(g => g.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+        FilteredApps.Clear();
+        foreach (var game in source)
+            FilteredApps.Add(game);
     }
 
     [RelayCommand]
     private async Task RefreshAsync()
     {
         var games = await _gameLibrary.LoadAsync();
-        Games.Clear();
-        foreach (var game in games)
+        _allGames = games;
+        ApplyFilter();
+        StatusText = $"{FilteredApps.Count} game(s)";
+        foreach (var game in _allGames.Where(g => g.IsInstalled))
         {
-            Games.Add(game);
+            _ = ResolveInstallSizeAsync(game);
         }
-        StatusText = $"{Games.Count} game(s)";
+    }
+
+    private async Task ResolveInstallSizeAsync(GameEntry game)
+    {
+        try
+        {
+            long? size = await _installSizeService.ResolveAsync(game);
+            if (size is > 0)
+                game.InstallSizeBytes = size;
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, $"[Library] Install size failed for '{game.Name}'");
+        }
+    }
+
+    [RelayCommand]
+    private void SelectGame(GameEntry game)
+    {
+        SelectedGame = game;
+        SelectedGameStatus = game.IsInstalled ? "Installed" : game.IsInstalling ? "Installing" : "Not installed";
+        _ = LoadDetailAsync(game);
+    }
+
+    private async Task LoadDetailAsync(GameEntry game)
+    {
+        SelectedGameHeroPath = null;
+        SelectedGameLogoPath = null;
+        SelectedGameMedia.Clear();
+
+        string? heroPath = SteamMetadataService.ResolveHeroPath(game.Image);
+        if (string.IsNullOrWhiteSpace(heroPath) && !string.IsNullOrWhiteSpace(game.AppId))
+            heroPath = Path.Combine(AppPaths.ManifestsDirectory, $"undefined_{game.AppId}", "Assets", "LibraryHero.jpg");
+        if (!string.IsNullOrWhiteSpace(heroPath)
+            && (!File.Exists(heroPath) || new FileInfo(heroPath).Length == 0)
+            && !string.IsNullOrWhiteSpace(game.AppId))
+        {
+            try
+            {
+                await _steamMetadata.DownloadHeroAsync(game.AppId, heroPath);
+            }
+            catch (Exception ex)
+            {
+                AppLog.Write(ex, $"[Library] Hero download failed for appId={game.AppId}");
+            }
+        }
+        if (!string.IsNullOrWhiteSpace(heroPath) && File.Exists(heroPath) && new FileInfo(heroPath).Length > 0)
+            SelectedGameHeroPath = heroPath;
+
+        if (!string.IsNullOrWhiteSpace(game.Image))
+        {
+            string? directory = Path.GetDirectoryName(game.Image);
+            string logoPath = directory is null ? null : Path.Combine(directory, "GameLogo.png");
+            if (logoPath is not null && File.Exists(logoPath))
+                SelectedGameLogoPath = logoPath;
+        }
+
+        if (string.IsNullOrWhiteSpace(game.AboutTheGame) && !game.AboutTheGameLoaded
+            && !string.IsNullOrWhiteSpace(game.AppId))
+        {
+            try
+            {
+                SteamStorePageInfo info = await _steamMetadata.GetStorePageInfoAsync(game.AppId);
+                if (!string.IsNullOrWhiteSpace(info.AboutTheGame))
+                {
+                    game.AboutTheGame = info.AboutTheGame;
+                    await _gameLibrary.SaveAsync(_allGames);
+                }
+                game.AboutTheGameLoaded = true;
+                game.SetMedia(info.Media);
+            }
+            catch (Exception ex)
+            {
+                AppLog.Write(ex, $"[Library] Store details failed for appId={game.AppId}");
+                game.AboutTheGameLoaded = true;
+                game.SetMedia([]);
+            }
+        }
+
+        SelectedGameMedia.Clear();
+        if (game.MediaLoaded)
+        {
+            foreach (var item in game.MediaItems.Take(6))
+                SelectedGameMedia.Add(item);
+        }
+        OnPropertyChanged(nameof(SelectedGame));
     }
 
     [RelayCommand]
@@ -71,7 +191,7 @@ public partial class LibraryViewModel : ObservableObject
                     return;
                 startLocation = picked;
                 game.StartLocation = startLocation;
-                await _gameLibrary.SaveAsync(Games);
+                await _gameLibrary.SaveAsync(_allGames);
             }
             string exePath = Path.GetFullPath(startLocation);
             string? workingDirectory = Path.GetDirectoryName(exePath);
@@ -83,12 +203,20 @@ public partial class LibraryViewModel : ObservableObject
             }
             await Task.Run(() => _gameLauncher.LaunchAsync(game, exePath, workingDirectory));
             game.IsRunning = true;
+            SelectedGameStatus = "Running";
         }
         catch (Exception ex)
         {
             AppLog.Write(ex, $"Unable to start game '{game.Name}'");
             await _messageBoxService.ShowAsync("Unable to start", ex.Message);
         }
+    }
+
+    [RelayCommand]
+    private void StopGame(GameEntry game)
+    {
+        game.IsRunning = false;
+        SelectedGameStatus = game.IsInstalled ? "Installed" : "Not installed";
     }
 
     [RelayCommand]
@@ -132,6 +260,49 @@ public partial class LibraryViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void OpenStorePage(GameEntry game)
+    {
+        if (string.IsNullOrWhiteSpace(game.AppId))
+            return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "xdg-open",
+                Arguments = $"https://store.steampowered.com/app/{game.AppId}/",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[Library] Could not open store page: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private void OpenMedia(GameMediaItem item)
+    {
+        string? url = item.IsVideo ? item.VideoUrl : item.ImageUrl;
+        if (string.IsNullOrWhiteSpace(url))
+            return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "xdg-open",
+                Arguments = url,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[Library] Could not open media: {ex.Message}");
+        }
+    }
+
     private async Task<string?> PickGameExecutableAsync(GameEntry game)
     {
         string? folder = game.InstallPath;
@@ -155,15 +326,13 @@ public partial class LibraryViewModel : ObservableObject
         if (executables.Count == 1)
             return executables[0];
 
-        // Same flow as the Windows app: let the user choose from the executables
-        // found in the install folder (plus a manual browse fallback).
         var vm = new ExeSelectionViewModel(
             $"Choose the game executable for {game.Name}",
             executables.Select(path => Path.GetRelativePath(folder, path)).ToList())
         {
             AllowBrowse = true
         };
-        var page = new Views.ExeSelectionDialog { DataContext = vm };
+        var page = new ExeSelectionDialog { DataContext = vm };
         var result = await _messageBoxService.ShowDialogAsync(page, "Play", "Cancel");
         if (result != ContentDialogResult.Primary)
             return null;
