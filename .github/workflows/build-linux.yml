@@ -48,5 +48,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EZManifest-Linux-AppImage
-          path: EZManifest.Linux/publish/EZManifest-*.AppImage
+          path: EZManifest.Linux/publish/out/EZManifest-*.AppImage
           if-no-files-found: error

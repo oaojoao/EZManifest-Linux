@@ -7,9 +7,11 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUBLISH="$ROOT/publish/linux-x64"
 APPDIR="$ROOT/publish/AppDir"
 TOOLS="$ROOT/publish/tools"
+OUTDIR="$ROOT/publish/out"
 VERSION="${1:-1.2.2}"
 
-rm -rf "$APPDIR"
+rm -rf "$APPDIR" "$OUTDIR"
+mkdir -p "$OUTDIR"
 mkdir -p "$APPDIR/usr/bin" \
          "$APPDIR/usr/share/applications" \
          "$APPDIR/usr/share/icons/hicolor/256x256/apps" \
@@ -29,7 +31,7 @@ if [ ! -x "$LINUXDEPLOY" ]; then
   exit 1
 fi
 
-export OUTPUT="$PUBLISH"
+export OUTPUT="$OUTDIR"
 export ARCH=x86_64
 export VERSION
 
@@ -40,7 +42,7 @@ export VERSION
   --icon-file="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
   --output=appimage
 
-mv "$PUBLISH/EZManifest-x86_64.AppImage" "$PUBLISH/EZManifest-$VERSION-x86_64.AppImage"
+mv "$OUTDIR/EZManifest-x86_64.AppImage" "$OUTDIR/EZManifest-$VERSION-x86_64.AppImage"
 
 echo "AppImage built:"
-ls -la "$PUBLISH"/*.AppImage
+ls -la "$OUTDIR"/*.AppImage
