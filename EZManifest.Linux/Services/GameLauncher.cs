@@ -75,11 +75,14 @@ public sealed class GameLauncher
         var detached = new ProcessStartInfo
         {
             FileName = "/bin/sh",
-            Arguments = $"-c {Quote(command)}",
             WorkingDirectory = psi.WorkingDirectory,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        // ArgumentList passes each argument verbatim; Arguments would be
+        // re-tokenized by .NET on spaces, splitting the shell command apart.
+        detached.ArgumentList.Add("-c");
+        detached.ArgumentList.Add(command);
         foreach (var pair in psi.Environment)
             detached.Environment[pair.Key] = pair.Value;
 
