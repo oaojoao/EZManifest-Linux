@@ -9,6 +9,9 @@ public partial class MainWindow : Window
 {
     private readonly IServiceProvider? _services;
 
+    /// <summary>Set at startup so view models can request page navigation.</summary>
+    public static Action<string>? NavigateRequested;
+
     public MainWindow()
     {
         AvaloniaXamlLoader.Load(this);
@@ -17,6 +20,7 @@ public partial class MainWindow : Window
     public MainWindow(IServiceProvider services) : this()
     {
         _services = services;
+        NavigateRequested = ShowPage;
         ShowPage("Library");
     }
 
