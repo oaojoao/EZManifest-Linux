@@ -18,18 +18,18 @@ mkdir -p "$APPDIR/usr/bin" \
          "$TOOLS"
 
 # CEF ships many native libraries next to the executable: copy the whole
-# publish output into the AppDir and launch through a wrapper that disables
-# the Chromium sandbox (unsupported inside an AppImage).
-mkdir -p "$APPDIR/usr/bin/app"
-cp -a "$PUBLISH/." "$APPDIR/usr/bin/app/"
-chmod +x "$APPDIR/usr/bin/app/EZManifest" 2>/dev/null || true
-find "$APPDIR/usr/bin/app" -name '*.so' -exec chmod +x {} + 2>/dev/null || true
+# publish output into the AppDir and launch through a shell wrapper.
+APPFOLDER="$APPDIR/usr/share/EZManifest"
+mkdir -p "$APPFOLDER"
+cp -a "$PUBLISH/." "$APPFOLDER/"
+chmod +x "$APPFOLDER/EZManifest" 2>/dev/null || true
+find "$APPFOLDER" -name '*.so' -exec chmod +x {} + 2>/dev/null || true
 
 cat > "$APPDIR/usr/bin/EZManifest" <<'WRAPPER'
 #!/usr/bin/env bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DOTNET_BUNDLE_EXTRACT_BASE_DIR="${TMPDIR:-/tmp}/ezmanifest-bundle"
-exec "$DIR/app/EZManifest" "$@"
+exec "$DIR/../share/EZManifest/EZManifest" "$@"
 WRAPPER
 chmod +x "$APPDIR/usr/bin/EZManifest"
 
@@ -48,24 +48,15 @@ export OUTPUT="$OUTDIR/EZManifest-$VERSION-x86_64.AppImage"
 export ARCH=x86_64
 export VERSION
 
-# Deploy dependencies from the real .NET executable; the launcher wrapper is a
-# shell script, so linuxdeploy must not try to parse it as an ELF binary.
-APPBIN="$APPDIR/usr/bin/app/EZManifest"
-chmod +x "$APPBIN"
+# Deploy shared-library dependencies of the bundled binaries without letting
+# linuxdeploy move or parse the wrapper. The app is self-contained .NET + CEF,
+# so this only picks up a handful of system libraries.
 "$LINUXDEPLOY" \
   --appdir="$APPDIR" \
   --desktop-file="$APPDIR/usr/share/applications/EZManifest.desktop" \
   --icon-file="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
-  --executable="$APPBIN" \
+  --deploy-deps-only="$APPFOLDER" \
   --output=appimage
-
-# linuxdeploy moved the real binary into usr/bin: put the wrapper back on top
-# and restore the app folder layout the wrapper expects.
-if [ -f "$APPDIR/usr/bin/EZManifest" ] && [ "$APPDIR/usr/bin/EZManifest" -ef "$APPBIN" ]; then
-  mv "$APPDIR/usr/bin/EZManifest" "$APPBIN"
-fi
-printf '#!/usr/bin/env bash\nDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\nexec "$DIR/app/EZManifest" "$@"\n' > "$APPDIR/usr/bin/EZManifest"
-chmod +x "$APPDIR/usr/bin/EZManifest"
 
 echo "AppImage built:"
 ls -la "$OUTDIR"/*.AppImage
