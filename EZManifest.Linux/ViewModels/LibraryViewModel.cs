@@ -60,7 +60,22 @@ public partial class LibraryViewModel : ObservableObject
         _steamMetadata = steamMetadata;
         _messageBoxService = messageBoxService;
         _filePicker = filePicker;
+        UrlToBitmapConverter.HttpImageLoaded += OnHttpImageLoaded;
         _ = RefreshAsync();
+    }
+
+    private void OnHttpImageLoaded(string url)
+    {
+        var items = SelectedGameMedia.Where(i => i.ThumbnailUrl == url).ToList();
+        foreach (var item in items)
+        {
+            int index = SelectedGameMedia.IndexOf(item);
+            if (index >= 0)
+            {
+                SelectedGameMedia[index] = item;
+                break;
+            }
+        }
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
@@ -118,7 +133,6 @@ public partial class LibraryViewModel : ObservableObject
             return;
         SelectedGame = game;
         SelectedGameStatus = game.IsInstalled ? "Installed" : game.IsInstalling ? "Installing" : "Not installed";
-        _ = LoadDetailAsync(game);
     }
 
     private async Task LoadDetailAsync(GameEntry game)
@@ -259,9 +273,12 @@ public partial class LibraryViewModel : ObservableObject
 
     partial void OnSelectedGameChanged(GameEntry? value)
     {
+        OnPropertyChanged(nameof(HasSelectedGame));
         if (value is not null)
             _ = LoadDetailAsync(value);
     }
+
+    public bool HasSelectedGame => SelectedGame is not null;
 
     [RelayCommand]
     private async Task SaveGamePrefixAsync(GameEntry game)

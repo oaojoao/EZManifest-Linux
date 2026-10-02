@@ -59,6 +59,7 @@ public sealed class GameEntry : INotifyPropertyChanged
             OnPropertyChanged();
             OnPropertyChanged(nameof(InstallSizeText));
             OnPropertyChanged(nameof(InstallSizeVisibility));
+            OnPropertyChanged(nameof(HasInstallSize));
         }
     }
 
@@ -68,6 +69,8 @@ public sealed class GameEntry : INotifyPropertyChanged
     [JsonIgnore]
     public Visibility InstallSizeVisibility =>
         InstallSizeBytes is > 0 ? Visibility.Visible : Visibility.Collapsed;
+    [JsonIgnore]
+    public bool HasInstallSize => InstallSizeBytes is > 0;
 
     private string _aboutTheGame = string.Empty;
 
@@ -244,6 +247,8 @@ public sealed class GameEntry : INotifyPropertyChanged
     [JsonIgnore]
     public Visibility NoArtVisibility =>
         HasCoverArt ? Visibility.Collapsed : Visibility.Visible;
+    [JsonIgnore]
+    public bool CoverArtIsMissing => !HasCoverArt;
 
     [JsonIgnore]
     public Visibility ListArtVisibility =>
@@ -262,6 +267,7 @@ public sealed class GameEntry : INotifyPropertyChanged
         OnPropertyChanged(nameof(HasListArt));
         OnPropertyChanged(nameof(CoverArtVisibility));
         OnPropertyChanged(nameof(NoArtVisibility));
+        OnPropertyChanged(nameof(CoverArtIsMissing));
         OnPropertyChanged(nameof(ListArtVisibility));
         OnPropertyChanged(nameof(NoListArtVisibility));
     }
