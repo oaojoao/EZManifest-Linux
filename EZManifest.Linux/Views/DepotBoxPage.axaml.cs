@@ -29,6 +29,9 @@ public partial class DepotBoxPage : UserControl
         WebView.Settings.PersistCache = true;
 
         _webView = new WebView();
+        // The internal chromium control mirrors this property; without it the
+        // off-screen browser never receives focus and text fields ignore clicks.
+        _webView.Focusable = true;
         _webView.Navigated += (url, _) => vm.OnNavigated(url);
         _webView.UnhandledAsyncException += e => EZManifest.Services.AppLog.Write(e.Exception, "[DepotBox] WebView error");
         InstallDownloadHandler(vm);
