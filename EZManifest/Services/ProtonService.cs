@@ -179,18 +179,35 @@ public sealed class ProtonService
     /// </summary>
     public static string GetCompatDataPath(string gameFolder, string appId)
     {
+        string compatDataPath;
         try
         {
             string parent = Path.GetDirectoryName(Path.GetFullPath(gameFolder));
-            if (!string.IsNullOrWhiteSpace(parent))
-                return Path.Combine(parent, "compatdata", appId);
+            compatDataPath = string.IsNullOrWhiteSpace(parent)
+                ? Path.Combine(gameFolder, "compatdata")
+                : Path.Combine(parent, "compatdata", appId);
         }
         catch (Exception ex)
         {
             AppLog.Write($"[Proton] Could not derive compatdata parent from '{gameFolder}': {ex.Message}");
+            compatDataPath = Path.Combine(gameFolder, "compatdata");
         }
 
-        return Path.Combine(gameFolder, "compatdata");
+        // Proton opens pfx.lock inside the prefix without creating parents,
+        // so a missing compatdata directory crashes the launch.
+        try
+        {
+            Directory.CreateDirectory(compatDataPath);
+            string pfxDir = Path.Combine(compatDataPath, "pfx");
+            if (!Directory.Exists(pfxDir))
+                Directory.CreateDirectory(pfxDir);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write($"[Proton] Could not create compatdata directory '{compatDataPath}': {ex.Message}");
+        }
+
+        return compatDataPath;
     }
 
     private static string Quote(string value) => $"\"{value.TrimEnd(Path.DirectorySeparatorChar).Replace("\"", "\\\"")}\"";
