@@ -17,7 +17,20 @@ mkdir -p "$APPDIR/usr/bin" \
          "$APPDIR/usr/share/icons/hicolor/256x256/apps" \
          "$TOOLS"
 
-cp "$PUBLISH/EZManifest" "$APPDIR/usr/bin/EZManifest"
+# CEF ships many native libraries next to the executable: copy the whole
+# publish output into the AppDir and launch through a wrapper that disables
+# the Chromium sandbox (unsupported inside an AppImage).
+mkdir -p "$APPDIR/usr/bin/app"
+cp -a "$PUBLISH/." "$APPDIR/usr/bin/app/"
+chmod +x "$APPDIR/usr/bin/app/EZManifest" 2>/dev/null || true
+find "$APPDIR/usr/bin/app" -name '*.so' -exec chmod +x {} + 2>/dev/null || true
+
+cat > "$APPDIR/usr/bin/EZManifest" <<'WRAPPER'
+#!/usr/bin/env bash
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export DOTNET_BUNDLE_EXTRACT_BASE_DIR="${TMPDIR:-/tmp}/ezmanifest-bundle"
+exec "$DIR/app/EZManifest" "$@"
+WRAPPER
 chmod +x "$APPDIR/usr/bin/EZManifest"
 
 cp "$ROOT/Packaging/EZManifest.desktop" "$APPDIR/usr/share/applications/EZManifest.desktop"

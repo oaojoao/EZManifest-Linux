@@ -25,6 +25,12 @@
                             <TextBlock Text="Library" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="NavDepotBox" Classes="nav" Click="OnNavigateDepotBox">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🌐" FontSize="15" />
+                            <TextBlock Text="DepotBox" />
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="NavDownloads" Classes="nav" Click="OnNavigateDownloads">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="⬇️" FontSize="15" />

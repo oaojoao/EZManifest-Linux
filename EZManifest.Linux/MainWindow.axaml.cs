@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     }
 
     private void OnNavigateLibrary(object sender, RoutedEventArgs e) => ShowPage("Library");
+    private void OnNavigateDepotBox(object sender, RoutedEventArgs e) => ShowPage("DepotBox");
     private void OnNavigateDownloads(object sender, RoutedEventArgs e) => ShowPage("Downloads");
     private void OnNavigatePatch(object sender, RoutedEventArgs e) => ShowPage("Patch");
     private void OnNavigateSettings(object sender, RoutedEventArgs e) => ShowPage("Settings");
@@ -31,6 +32,7 @@ public partial class MainWindow : Window
             return;
         object content = page switch
         {
+            "DepotBox" => _services.GetRequiredService<Views.DepotBoxPage>(),
             "Downloads" => _services.GetRequiredService<Views.DownloadsPage>(),
             "Patch" => _services.GetRequiredService<Views.PatchPage>(),
             "Settings" => _services.GetRequiredService<Views.SettingsPage>(),

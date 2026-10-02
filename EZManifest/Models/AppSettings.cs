@@ -56,4 +56,8 @@ public sealed class AppSettings
 
     /// <summary>Preferred Proton version name, or "Auto" to use the newest installed one.</summary>
     public string ProtonVersion { get; set; } = Services.ProtonService.AutoVersion;
+    /// <summary>Global WINE prefix shared by every game. Empty = one prefix per game (compatdata/<appid>).</summary>
+    public string ProtonGlobalPrefixPath { get; set; } = string.Empty;
+    /// <summary>Per-game WINE prefix override. Empty = use the global setting.</summary>
+    public string ProtonPrefixPath { get; set; } = string.Empty;
 }
