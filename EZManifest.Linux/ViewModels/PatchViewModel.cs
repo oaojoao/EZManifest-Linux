@@ -56,12 +56,19 @@ public partial class PatchViewModel : ObservableObject
     [RelayCommand]
     private async Task BrowsePatchArchiveAsync()
     {
+        try
+        {
         var paths = await _filePicker.PickFilesAsync([".zip", ".7z", ".rar"], "Select patch archive");
         if (paths.Count == 0)
             return;
 
         _patchArchivePath = paths[0];
         await ExtractPatchAsync();
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write(ex, "[Patch] Browse failed");
+        }
     }
 
     private async Task ExtractPatchAsync()
