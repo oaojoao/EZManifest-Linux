@@ -281,6 +281,16 @@ public partial class LibraryViewModel : ObservableObject
     public bool HasSelectedGame => SelectedGame is not null;
 
     [RelayCommand]
+    private void CloseDetail()
+    {
+        SelectedGame = null;
+        SelectedGameStatus = string.Empty;
+        SelectedGameHeroPath = null;
+        SelectedGameLogoPath = null;
+        SelectedGameMedia.Clear();
+    }
+
+    [RelayCommand]
     private async Task SaveGamePrefixAsync(GameEntry game)
     {
         if (game is null)
