@@ -31,7 +31,7 @@ if [ ! -x "$LINUXDEPLOY" ]; then
   exit 1
 fi
 
-export OUTPUT="$OUTDIR"
+export OUTPUT="$OUTDIR/EZManifest-$VERSION-x86_64.AppImage"
 export ARCH=x86_64
 export VERSION
 
@@ -41,8 +41,6 @@ export VERSION
   --desktop-file="$APPDIR/usr/share/applications/EZManifest.desktop" \
   --icon-file="$APPDIR/usr/share/icons/hicolor/256x256/apps/EZManifest.png" \
   --output=appimage
-
-mv "$OUTDIR/EZManifest-x86_64.AppImage" "$OUTDIR/EZManifest-$VERSION-x86_64.AppImage"
 
 echo "AppImage built:"
 ls -la "$OUTDIR"/*.AppImage
