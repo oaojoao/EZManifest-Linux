@@ -65,7 +65,11 @@ public sealed class ProtonService
                 {
                     if (!Directory.Exists(libraryRoot))
                         continue;
-                    resolved = Path.GetFullPath(libraryRoot);
+                    // Path.GetFullPath only normalizes the string and keeps symlinks:
+                    // the final target must be resolved or the same Proton build is
+                    // discovered once per alias.
+                    FileSystemInfo? target = Directory.ResolveLinkTarget(libraryRoot, returnFinalTarget: true);
+                    resolved = target?.FullName ?? Path.GetFullPath(libraryRoot);
                 }
                 catch
                 {
