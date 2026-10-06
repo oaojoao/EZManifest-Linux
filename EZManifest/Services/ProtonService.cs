@@ -182,7 +182,7 @@ public sealed class ProtonService
         string compatDataPath;
         try
         {
-            string parent = Path.GetDirectoryName(Path.GetFullPath(gameFolder));
+            string? parent = Path.GetDirectoryName(Path.GetFullPath(gameFolder));
             compatDataPath = string.IsNullOrWhiteSpace(parent)
                 ? Path.Combine(gameFolder, "compatdata")
                 : Path.Combine(parent, "compatdata", appId);

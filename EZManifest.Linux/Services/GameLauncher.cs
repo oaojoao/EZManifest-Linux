@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using EZManifest.Models;
 using EZManifest.Services;
 
@@ -8,6 +9,7 @@ namespace EZManifest.Linux.Services;
 /// Launches downloaded games on Linux: Windows executables run through Proton,
 /// native Linux binaries launch directly.
 /// </summary>
+[SupportedOSPlatform("linux")]
 public sealed class GameLauncher
 {
     private readonly AppSettingsService _settingsService;
@@ -212,7 +214,7 @@ public sealed class GameLauncher
     }
 
     private static string Quote(string value) =>
-        "'" + value.Replace("'", "'\''") + "'";
+        "'" + value.Replace("'", "'\\''") + "'";
 
     private static void LaunchDirect(
         string fileName,

@@ -6,6 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$ROOT/publish/linux-x64"
 CLI_URL="https://github.com/dpadGuy/Steam-auto-crack/releases/download/3.5.0.7/SteamAutoCrack.CLI.zip"
+CLI_SHA256="b2338e1d97405bac49cca121a969b57ffb094aecbda9b18bc6093b333a591e73"
 
 dotnet publish "$ROOT/EZManifest.Linux.csproj" \
   -c Release \
@@ -26,6 +27,7 @@ else
   trap 'rm -rf "$TMP"' EXIT
   echo "Fetching SteamAutoCrack.CLI from $CLI_URL ..."
   curl -fsSL -o "$TMP/sac.zip" "$CLI_URL"
+  echo "$CLI_SHA256  $TMP/sac.zip" | sha256sum -c -
   unzip -q "$TMP/sac.zip" -d "$TMP/sac"
   mkdir -p "$STAGE_DIR"
   cp -a "$TMP/sac/." "$STAGE_DIR/"

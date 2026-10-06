@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Text;
 using EZManifest.Services;
 
@@ -6,6 +7,7 @@ namespace EZManifest.Linux.Services;
 /// <summary>
 /// Creates and removes .desktop shortcuts on Linux (equivalent of the Windows .lnk service).
 /// </summary>
+[SupportedOSPlatform("linux")]
 public sealed class ShortcutService
 {
     public string CreateDesktopShortcut(
@@ -13,7 +15,8 @@ public sealed class ShortcutService
         string shortcutTitle,
         string? workingDirectory = null,
         string? description = null,
-        string? arguments = null)
+        string? arguments = null,
+        string? iconPath = null)
     {
         if (string.IsNullOrWhiteSpace(targetExePath))
             throw new ArgumentException("Target executable path is required.", nameof(targetExePath));
@@ -26,17 +29,19 @@ public sealed class ShortcutService
         workingDirectory ??= Path.GetDirectoryName(targetExePath) ?? string.Empty;
 
         string exec = string.IsNullOrWhiteSpace(arguments)
-            ? targetExePath
-            : $"{targetExePath} {arguments}";
+            ? EscapeExecArgument(targetExePath)
+            : $"{EscapeExecArgument(targetExePath)} {arguments}";
 
         var sb = new StringBuilder();
         sb.AppendLine("[Desktop Entry]");
         sb.AppendLine("Type=Application");
-        sb.AppendLine($"Name={shortcutTitle}");
+        sb.AppendLine($"Name={EscapeEntryValue(shortcutTitle)}");
         sb.AppendLine($"Exec={exec}");
-        sb.AppendLine($"Path={workingDirectory}");
+        sb.AppendLine($"Path={EscapeEntryValue(workingDirectory)}");
+        if (!string.IsNullOrWhiteSpace(iconPath))
+            sb.AppendLine($"Icon={EscapeEntryValue(iconPath)}");
         if (!string.IsNullOrWhiteSpace(description))
-            sb.AppendLine($"Comment={description}");
+            sb.AppendLine($"Comment={EscapeEntryValue(description)}");
         sb.AppendLine("Terminal=false");
         sb.AppendLine("Categories=Game;");
         File.WriteAllText(shortcutPath, sb.ToString());
@@ -68,8 +73,39 @@ public sealed class ShortcutService
         }
     }
 
+    /// <summary>
+    /// Quotes one Exec argument per the desktop entry spec: when the value contains
+    /// a reserved character it is wrapped in double quotes, with '\', '"', '`' and
+    /// '$' escaped by a backslash. Unquoted values are returned unchanged.
+    /// </summary>
+    private static string EscapeExecArgument(string value)
+    {
+        const string Reserved = " \"'\t`$<>|~&;()";
+        if (value.Length != 0 && !value.Any(Reserved.Contains))
+            return value;
+
+        return "\"" + value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("`", "\\`")
+            .Replace("$", "\\$") + "\"";
+    }
+
+    /// <summary>Single-line string key value: line breaks would end the key.</summary>
+    private static string EscapeEntryValue(string value) =>
+        value.Replace("\r", " ").Replace("\n", " ");
+
     private static void TryMarkTrusted(string path)
     {
+        try
+        {
+            // KDE only shows .desktop launchers that carry the execute bit;
+            // GNOME tracks trust in the metadata::trusted attribute instead.
+            File.SetUnixFileMode(path, File.GetUnixFileMode(path) | UnixFileMode.UserExecute);
+        }
+        catch
+        {
+        }
         try
         {
             var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
