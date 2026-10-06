@@ -6,7 +6,7 @@
 *.suo
 
 ## Publish / runtime (local)
-/publish/
+**/publish/
 /installer/*.exe
 settings.json
 items.json
